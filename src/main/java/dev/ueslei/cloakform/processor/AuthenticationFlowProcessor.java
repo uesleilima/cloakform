@@ -41,7 +41,7 @@ public class AuthenticationFlowProcessor {
         flows.getExecutions(flowAlias).forEach(execution -> {
             if (execution.getLevel() == 0) { // Listing only top level for each subflow to avoid duplication
                 if (execution.getAuthenticationFlow() != null && execution.getAuthenticationFlow()) {
-                    var subflowImports = generateImports(realm, execution.getId(), execution.getDisplayName(),
+                    var subflowImports = generateImports(realm, execution.getFlowId(), execution.getDisplayName(),
                         flowAlias, level + 1);
                     imports.addAll(subflowImports);
                 } else {
@@ -99,7 +99,9 @@ public class AuthenticationFlowProcessor {
         String prefix = sanitizedFlowAlias.split("_").length > 1
             ? WordUtils.initials(sanitizedFlowAlias, '_')
             : sanitizedFlowAlias;
-        return StringUtils.left(prefix, 3) + "_";
+        int hashCode = Math.abs(flowAlias.hashCode());
+        int fourDigitHash = hashCode % 10000;
+        return StringUtils.left(prefix, 4) + "_" + fourDigitHash + "_";
     }
 
     private static String sanitizeAlias(String alias) {
