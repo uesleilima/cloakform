@@ -1,9 +1,11 @@
 package dev.ueslei.cloakform.keycloak;
 
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.admin.client.resource.AuthenticationManagementResource;
+import org.keycloak.representations.idm.AuthenticatorConfigRepresentation;
 
 public class KeycloakTest {
 
@@ -11,22 +13,23 @@ public class KeycloakTest {
     void printAuthenticationFlowsTest() {
         var keycloak = createKeycloak();
         var flows = keycloak.realm("customer").flows();
-        flows.getFlows().forEach(f -> {
-            System.out.println(f.getAlias() + ": " + f.getProviderId());
-            printFlow(flows, f.getAlias(), 1);
-        });
+        flows.getFlows().forEach(f -> printFlow(flows, f.getAlias(), 0));
     }
 
-    static void printFlow(AuthenticationManagementResource flows, String alias, int level) {
+    static void printFlow(AuthenticationManagementResource flows, String flowAlias, int level) {
         String tab = "\t";
-        flows.getExecutions(alias).forEach(e -> {
-            if (e.getLevel() == 0) {
-                if (e.getAuthenticationFlow() != null && e.getAuthenticationFlow()) {
-                    var subflow = flows.getFlow(e.getFlowId());
-                    System.out.println(tab.repeat(level) + subflow.getAlias() + ": " + subflow.getProviderId());
-                    printFlow(flows, subflow.getAlias(), level + 1);
+        System.out.println(tab.repeat(level) + flowAlias);
+        flows.getExecutions(flowAlias).forEach(execution -> {
+            if (execution.getLevel() == 0) {
+                if (execution.getAuthenticationFlow() != null && execution.getAuthenticationFlow()) {
+                    printFlow(flows, execution.getDisplayName(), level + 1);
                 } else {
-                    System.out.println(tab.repeat(level) + "* " + e.getProviderId());
+                    Optional<AuthenticatorConfigRepresentation> config = execution.getAuthenticationConfig() != null
+                        ? Optional.of(flows.getAuthenticatorConfig(execution.getAuthenticationConfig()))
+                        : Optional.empty();
+                    System.out.println(
+                        tab.repeat(level) + " * " + execution.getProviderId() +
+                            config.map(c -> " [" + c.getAlias() + "]").orElse(""));
                 }
             }
         });
