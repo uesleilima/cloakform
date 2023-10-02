@@ -1,7 +1,7 @@
 package dev.ueslei.cloakform.handler;
 
 import dev.ueslei.cloakform.model.TerraformImport;
-import dev.ueslei.cloakform.processor.AuthenticationFlowProcessor;
+import dev.ueslei.cloakform.processor.ImportAuthenticationFlowProcessor;
 import dev.ueslei.cloakform.writer.TerraformImportWriter;
 import java.io.IOException;
 import java.util.List;
@@ -14,7 +14,7 @@ import org.springframework.shell.standard.ShellOption;
 @RequiredArgsConstructor
 public class AuthenticationFlowHandler {
 
-    private final AuthenticationFlowProcessor processor;
+    private final ImportAuthenticationFlowProcessor processor;
     private final TerraformImportWriter writer;
 
     @ShellMethod("Generates terraform file with Authentication Flows imports.")
@@ -24,7 +24,7 @@ public class AuthenticationFlowHandler {
         @ShellOption(value = {"-o", "--output"}, defaultValue = "/tmp/flows_imports.tf") String output)
         throws IOException {
 
-        List<TerraformImport> imports = processor.generateImports(realm, flowAlias);
+        List<TerraformImport> imports = processor.generate(realm, flowAlias);
         writer.write(imports, output);
     }
 
