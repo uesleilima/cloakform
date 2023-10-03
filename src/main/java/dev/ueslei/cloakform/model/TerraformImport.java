@@ -1,18 +1,17 @@
 package dev.ueslei.cloakform.model;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+public class TerraformImport extends TerraformObject {
 
-@Getter
-@Setter
-@NoArgsConstructor
-public class TerraformImport extends TerraformResource {
-
-    String id;
+    private final String name;
 
     public TerraformImport(String id, String resource, String name) {
-        super(resource, name);
-        this.id = id;
+        this.name = name;
+        super.getAttributes().put("id", id);
+        super.getAttributes().put("to", String.format("%s.%s", resource, name));
+    }
+
+    @Override
+    public String toString() {
+        return this.name;
     }
 }

@@ -1,5 +1,6 @@
 package dev.ueslei.cloakform.processor;
 
+import dev.ueslei.cloakform.model.TerraformObject;
 import dev.ueslei.cloakform.model.TerraformResource;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.Keycloak;
@@ -17,14 +18,15 @@ public class ResourceAuthenticationFlowProcessor extends AbstractAuthenticationF
 
     @Override
     public TerraformResource createExecutionConfig(String realm, String flowPrefix,
-        AuthenticationExecutionInfoRepresentation execution, AuthenticatorConfigRepresentation executionConfig) {
+        AuthenticationExecutionInfoRepresentation execution, AuthenticatorConfigRepresentation executionConfig,
+        TerraformObject parentResource) {
         return new TerraformResource("keycloak_authentication_execution_config",
             flowPrefix + sanitizeAlias(executionConfig.getAlias()));
     }
 
     @Override
     public TerraformResource createExecution(String realm, String parentFlowAlias,
-        String flowPrefix, AuthenticationExecutionInfoRepresentation execution) {
+        String flowPrefix, AuthenticationExecutionInfoRepresentation execution, TerraformObject parentResource) {
         return new TerraformResource(
             "keycloak_authentication_execution",
             flowPrefix + sanitizeAlias(execution.getProviderId()));
@@ -32,7 +34,7 @@ public class ResourceAuthenticationFlowProcessor extends AbstractAuthenticationF
 
     @Override
     public TerraformResource createFlow(String realm, String flowId, String flowAlias,
-        String parentFlowAlias) {
+        String parentFlowAlias, TerraformObject parentResource) {
         String terraformResource = parentFlowAlias == null
             ? "keycloak_authentication_flow"
             : "keycloak_authentication_subflow";

@@ -1,5 +1,6 @@
 package dev.ueslei.cloakform.processor;
 
+import dev.ueslei.cloakform.model.TerraformObject;
 import dev.ueslei.cloakform.model.TerraformImport;
 import dev.ueslei.cloakform.model.TerraformResource;
 import lombok.extern.slf4j.Slf4j;
@@ -21,8 +22,10 @@ public class ImportAuthenticationFlowProcessor extends AbstractAuthenticationFlo
 
     @Override
     public TerraformImport createExecutionConfig(String realm, String flowPrefix,
-        AuthenticationExecutionInfoRepresentation execution, AuthenticatorConfigRepresentation executionConfig) {
-        TerraformResource resource = processor.createExecutionConfig(realm, flowPrefix, execution, executionConfig);
+        AuthenticationExecutionInfoRepresentation execution, AuthenticatorConfigRepresentation executionConfig,
+        TerraformObject parentResource) {
+        TerraformResource resource = processor.createExecutionConfig(realm, flowPrefix, execution, executionConfig,
+            parentResource);
         String terraformExecutionConfigId = String.format("%s/%s/%s", realm, execution.getId(),
             executionConfig.getId());
         return new TerraformImport(terraformExecutionConfigId, resource.getResource(), resource.getName());
@@ -30,16 +33,17 @@ public class ImportAuthenticationFlowProcessor extends AbstractAuthenticationFlo
 
     @Override
     public TerraformImport createExecution(String realm, String parentFlowAlias,
-        String flowPrefix, AuthenticationExecutionInfoRepresentation execution) {
-        TerraformResource resource = processor.createExecution(realm, parentFlowAlias, flowPrefix, execution);
+        String flowPrefix, AuthenticationExecutionInfoRepresentation execution, TerraformObject parentResource) {
+        TerraformResource resource = processor.createExecution(realm, parentFlowAlias, flowPrefix, execution,
+            parentResource);
         String terraformExecutionId = String.format("%s/%s/%s", realm, parentFlowAlias, execution.getId());
         return new TerraformImport(terraformExecutionId, resource.getResource(), resource.getName());
     }
 
     @Override
     public TerraformImport createFlow(String realm, String flowId, String flowAlias,
-        String parentFlowAlias) {
-        TerraformResource resource = processor.createFlow(realm, flowId, flowAlias, parentFlowAlias);
+        String parentFlowAlias, TerraformObject parentResource) {
+        TerraformResource resource = processor.createFlow(realm, flowId, flowAlias, parentFlowAlias, parentResource);
         String terraformFlowId = parentFlowAlias == null
             ? String.format("%s/%s", realm, flowId)
             : String.format("%s/%s/%s", realm, parentFlowAlias, flowId);

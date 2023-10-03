@@ -9,9 +9,14 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class TerraformResource {
+public class TerraformResource extends TerraformObject {
 
     String resource;
 
     String name;
+
+    @Override
+    public String toString() {
+        return this.name;
+    }
 }
