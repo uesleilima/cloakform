@@ -1,7 +1,10 @@
 package dev.ueslei.cloakform.processor;
 
+import static dev.ueslei.cloakform.model.AttributeType.REFERENCE;
+
 import dev.ueslei.cloakform.model.TerraformObject;
 import dev.ueslei.cloakform.model.TerraformResource;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.AuthenticationExecutionInfoRepresentation;
@@ -23,6 +26,7 @@ public class ResourceAuthenticationFlowProcessor extends AbstractAuthenticationF
         var resource = new TerraformResource("keycloak_authentication_execution_config",
             flowPrefix + sanitizeAlias(executionConfig.getAlias()));
         resource.addAttribute("alias", executionConfig.getAlias());
+        resource.addAttribute("realm_id", realm);
         return resource;
     }
 
@@ -33,6 +37,9 @@ public class ResourceAuthenticationFlowProcessor extends AbstractAuthenticationF
             "keycloak_authentication_execution",
             flowPrefix + sanitizeAlias(execution.getProviderId()));
         resource.addAttribute("authenticator", execution.getProviderId());
+        resource.addAttribute("realm_id", realm);
+        getParentFlowAlias(parentResource)
+            .ifPresent(alias -> resource.addAttribute("parent_flow_alias", alias, REFERENCE));
         return resource;
     }
 
@@ -44,7 +51,17 @@ public class ResourceAuthenticationFlowProcessor extends AbstractAuthenticationF
             : "keycloak_authentication_subflow";
         var resource = new TerraformResource(terraformResource, sanitizeAlias(flowAlias));
         resource.addAttribute("alias", flowAlias);
+        resource.addAttribute("realm_id", realm);
+        getParentFlowAlias(parentResource)
+            .ifPresent(alias -> resource.addAttribute("parent_flow_alias", alias, REFERENCE));
         return resource;
+    }
+
+    private Optional<Object> getParentFlowAlias(TerraformObject parentObject) {
+        if (parentObject instanceof TerraformResource parentResource) {
+            return Optional.of(String.format("%s.%s.alias", parentResource.getResource(), parentResource.getName()));
+        }
+        return Optional.empty();
     }
 
 }

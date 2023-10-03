@@ -3,6 +3,7 @@ package dev.ueslei.cloakform.writer;
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
+import com.github.mustachejava.reflect.ReflectionObjectHandler;
 import dev.ueslei.cloakform.model.TerraformObject;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -11,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
+import java.util.Map;
 
 public class TerraformObjectWriter<T extends TerraformObject> {
 
@@ -21,7 +23,14 @@ public class TerraformObjectWriter<T extends TerraformObject> {
     }
 
     protected MustacheFactory createMustacheFactory() {
-        return new DefaultMustacheFactory();
+        DefaultMustacheFactory factory = new DefaultMustacheFactory();
+        factory.setObjectHandler(new ReflectionObjectHandler() {
+            @Override
+            protected boolean areMethodsAccessible(Map<?, ?> map) {
+                return true;
+            }
+        });
+        return factory;
     }
 
     public void write(List<T> resources, String outFile) throws IOException {

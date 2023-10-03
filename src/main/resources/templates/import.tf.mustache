@@ -1,4 +1,5 @@
 import {
-  id = "{{attributes.id}}"
-  to = {{attributes.to}}
+  {{#attributes.keySet}}
+    {{.}} = {{#handleAttribute}}{{.}}{{/handleAttribute}}
+  {{/attributes.keySet}}
 }

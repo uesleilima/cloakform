@@ -1,5 +1,5 @@
 resource "{{resource}}" "{{name}}" {
-{{#attributes.entrySet}}
-  {{key}} = "{{value}}"
-{{/attributes.entrySet}}
+  {{#attributes.keySet}}
+    {{.}} = {{#handleAttribute}}{{.}}{{/handleAttribute}}
+  {{/attributes.keySet}}
 }
