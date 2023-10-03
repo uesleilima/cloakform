@@ -1,5 +1,6 @@
 package dev.ueslei.cloakform.processor;
 
+import static dev.ueslei.cloakform.model.AttributeType.MAP;
 import static dev.ueslei.cloakform.model.AttributeType.REFERENCE;
 
 import dev.ueslei.cloakform.model.TerraformObject;
@@ -27,6 +28,9 @@ public class ResourceAuthenticationFlowProcessor extends AbstractAuthenticationF
             flowPrefix + sanitizeAlias(executionConfig.getAlias()));
         resource.addAttribute("alias", executionConfig.getAlias());
         resource.addAttribute("realm_id", realm);
+        resource.addAttribute("config", executionConfig.getConfig(), MAP);
+        getParentResourceName(parentResource)
+            .ifPresent(name -> resource.addAttribute("execution_id", name + ".id", REFERENCE));
         return resource;
     }
 
@@ -38,8 +42,9 @@ public class ResourceAuthenticationFlowProcessor extends AbstractAuthenticationF
             flowPrefix + sanitizeAlias(execution.getProviderId()));
         resource.addAttribute("authenticator", execution.getProviderId());
         resource.addAttribute("realm_id", realm);
-        getParentFlowAlias(parentResource)
-            .ifPresent(alias -> resource.addAttribute("parent_flow_alias", alias, REFERENCE));
+        resource.addAttribute("requirement", execution.getRequirement());
+        getParentResourceName(parentResource)
+            .ifPresent(name -> resource.addAttribute("parent_flow_alias", name + ".alias", REFERENCE));
         return resource;
     }
 
@@ -52,14 +57,14 @@ public class ResourceAuthenticationFlowProcessor extends AbstractAuthenticationF
         var resource = new TerraformResource(terraformResource, sanitizeAlias(flowAlias));
         resource.addAttribute("alias", flowAlias);
         resource.addAttribute("realm_id", realm);
-        getParentFlowAlias(parentResource)
-            .ifPresent(alias -> resource.addAttribute("parent_flow_alias", alias, REFERENCE));
+        getParentResourceName(parentResource)
+            .ifPresent(name -> resource.addAttribute("parent_flow_alias", name + ".alias", REFERENCE));
         return resource;
     }
 
-    private Optional<Object> getParentFlowAlias(TerraformObject parentObject) {
+    private Optional<Object> getParentResourceName(TerraformObject parentObject) {
         if (parentObject instanceof TerraformResource parentResource) {
-            return Optional.of(String.format("%s.%s.alias", parentResource.getResource(), parentResource.getName()));
+            return Optional.of(String.format("%s.%s", parentResource.getResource(), parentResource.getName()));
         }
         return Optional.empty();
     }

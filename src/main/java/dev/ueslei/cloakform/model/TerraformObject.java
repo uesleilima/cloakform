@@ -3,6 +3,7 @@ package dev.ueslei.cloakform.model;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -27,7 +28,11 @@ public class TerraformObject {
             return switch (attribute.type()) {
                 case STRING -> String.format("'%s'", attribute.value());
                 case REFERENCE -> String.format("%s", attribute.value());
-                case MAP -> attribute.value();
+                case MAP -> ((Map<String, String>) attribute.value())
+                    .entrySet()
+                    .stream()
+                    .map(e -> "'" + e.getKey() + "' = '" + e.getValue() + "'")
+                    .collect(Collectors.joining(",", " { ", " }"));
             };
         };
     }
