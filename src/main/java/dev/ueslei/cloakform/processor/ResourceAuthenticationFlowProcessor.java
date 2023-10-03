@@ -20,16 +20,20 @@ public class ResourceAuthenticationFlowProcessor extends AbstractAuthenticationF
     public TerraformResource createExecutionConfig(String realm, String flowPrefix,
         AuthenticationExecutionInfoRepresentation execution, AuthenticatorConfigRepresentation executionConfig,
         TerraformObject parentResource) {
-        return new TerraformResource("keycloak_authentication_execution_config",
+        var resource = new TerraformResource("keycloak_authentication_execution_config",
             flowPrefix + sanitizeAlias(executionConfig.getAlias()));
+        resource.addAttribute("alias", executionConfig.getAlias());
+        return resource;
     }
 
     @Override
     public TerraformResource createExecution(String realm, String parentFlowAlias,
         String flowPrefix, AuthenticationExecutionInfoRepresentation execution, TerraformObject parentResource) {
-        return new TerraformResource(
+        var resource = new TerraformResource(
             "keycloak_authentication_execution",
             flowPrefix + sanitizeAlias(execution.getProviderId()));
+        resource.addAttribute("authenticator", execution.getProviderId());
+        return resource;
     }
 
     @Override
@@ -38,7 +42,9 @@ public class ResourceAuthenticationFlowProcessor extends AbstractAuthenticationF
         String terraformResource = parentFlowAlias == null
             ? "keycloak_authentication_flow"
             : "keycloak_authentication_subflow";
-        return new TerraformResource(terraformResource, sanitizeAlias(flowAlias));
+        var resource = new TerraformResource(terraformResource, sanitizeAlias(flowAlias));
+        resource.addAttribute("alias", flowAlias);
+        return resource;
     }
 
 }

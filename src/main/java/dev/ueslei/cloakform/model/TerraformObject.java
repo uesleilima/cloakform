@@ -1,15 +1,18 @@
 package dev.ueslei.cloakform.model;
 
-import java.util.HashMap;
-import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.collections.map.HashedMap;
 
 
 @Getter
 @Setter
 public class TerraformObject {
 
-    private Map<String, Object> attributes = new HashMap<>();
+    private HashedMap attributes = new HashedMap();
+
+    public void addAttribute(String name, Object value) {
+        this.attributes.put(name, value);
+    }
 
 }
