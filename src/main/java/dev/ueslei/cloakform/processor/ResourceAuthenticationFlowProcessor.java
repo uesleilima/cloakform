@@ -25,9 +25,9 @@ public class ResourceAuthenticationFlowProcessor extends AbstractAuthenticationF
         AuthenticationExecutionInfoRepresentation execution, AuthenticatorConfigRepresentation executionConfig,
         TerraformObject parentResource) {
         var resource = new TerraformResource("keycloak_authentication_execution_config",
-            flowPrefix + sanitizeAlias(executionConfig.getAlias()));
+            flowPrefix + sanitizeName(executionConfig.getAlias()));
         resource.addAttribute("alias", executionConfig.getAlias());
-        resource.addAttribute("realm_id", realm);
+        resource.addAttribute("realm_id", getRealmIdReference(parentResource), REFERENCE);
         resource.addAttribute("config", executionConfig.getConfig(), MAP);
         getParentResourceName(parentResource)
             .ifPresent(name -> resource.addAttribute("execution_id", name + ".id", REFERENCE));
@@ -39,9 +39,9 @@ public class ResourceAuthenticationFlowProcessor extends AbstractAuthenticationF
         String flowPrefix, AuthenticationExecutionInfoRepresentation execution, TerraformObject parentResource) {
         var resource = new TerraformResource(
             "keycloak_authentication_execution",
-            flowPrefix + sanitizeAlias(execution.getProviderId()));
+            flowPrefix + sanitizeName(execution.getProviderId()));
         resource.addAttribute("authenticator", execution.getProviderId());
-        resource.addAttribute("realm_id", realm);
+        resource.addAttribute("realm_id", getRealmIdReference(parentResource), REFERENCE);
         resource.addAttribute("requirement", execution.getRequirement());
         getParentResourceName(parentResource)
             .ifPresent(name -> resource.addAttribute("parent_flow_alias", name + ".alias", REFERENCE));
@@ -50,16 +50,44 @@ public class ResourceAuthenticationFlowProcessor extends AbstractAuthenticationF
 
     @Override
     public TerraformResource createFlow(String realm, String flowId, String flowAlias,
-        String parentFlowAlias, TerraformObject parentResource) {
+        String parentFlowAlias, AuthenticationExecutionInfoRepresentation flowExecution,
+        TerraformObject parentResource) {
         String terraformResource = parentFlowAlias == null
             ? "keycloak_authentication_flow"
             : "keycloak_authentication_subflow";
-        var resource = new TerraformResource(terraformResource, sanitizeAlias(flowAlias));
+        var resource = new TerraformResource(terraformResource, sanitizeName(flowAlias));
         resource.addAttribute("alias", flowAlias);
-        resource.addAttribute("realm_id", realm);
-        getParentResourceName(parentResource)
-            .ifPresent(name -> resource.addAttribute("parent_flow_alias", name + ".alias", REFERENCE));
+        resource.addAttribute("realm_id", getRealmIdReference(parentResource), REFERENCE);
+        if (flowExecution != null) {
+            Optional.ofNullable(flowExecution.getRequirement())
+                .ifPresent(v -> resource.addAttribute("requirement", v));
+            Optional.ofNullable(flowExecution.getProviderId())
+                .ifPresent(v -> resource.addAttribute("provider_id", v));
+        }
+        if (parentFlowAlias != null) {
+            getParentResourceName(parentResource)
+                .ifPresent(name -> resource.addAttribute("parent_flow_alias", name + ".alias", REFERENCE));
+        }
         return resource;
+    }
+
+    @Override
+    protected TerraformResource createRealm(String realmName) {
+        TerraformResource realmResource = new TerraformResource("keycloak_realm", sanitizeName(realmName));
+        realmResource.addAttribute("realm", realmName);
+        return realmResource;
+    }
+
+    @Override
+    protected boolean includeRealm() {
+        return false;
+    }
+
+    private String getRealmIdReference(TerraformObject object) {
+        if (object instanceof TerraformResource resource && resource.getResource().equals("keycloak_realm")) {
+            return String.format("%s.%s.id", resource.getResource(), resource.getName());
+        }
+        return object.getAttribute("realm_id").orElse(null);
     }
 
     private Optional<Object> getParentResourceName(TerraformObject parentObject) {

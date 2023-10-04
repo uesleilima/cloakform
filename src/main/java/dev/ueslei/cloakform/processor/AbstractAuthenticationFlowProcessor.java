@@ -21,32 +21,42 @@ public abstract class AbstractAuthenticationFlowProcessor<T extends TerraformObj
 
     private final Keycloak keycloak;
 
-    public List<T> generate(String realm, String flowAlias) {
-        return keycloak.realms().realm(realm).flows().getFlows().stream()
+    public List<T> generate(String realmName, String flowAlias) {
+        return keycloak.realms().realm(realmName).flows().getFlows().stream()
             .filter(f -> f.getAlias().equals(flowAlias))
             .findFirst()
-            .map(flow -> generate(realm, flow.getAlias(), flow.getId(), null, null, 0))
+            .map(flow -> generate(realmName, flow.getAlias(), flow.getId(), null, null, null, 0))
             .orElse(List.of());
     }
 
-    public List<T> generate(String realm, String flowAlias, String flowId, String parentFlowAlias,
-        TerraformObject parentResource, int level) {
+    public List<T> generate(String realmName, String flowAlias, String flowId, String parentFlowAlias,
+        AuthenticationExecutionInfoRepresentation flowExecution, TerraformObject parentObject, int level) {
         List<T> resources = new ArrayList<>();
-        AuthenticationManagementResource flows = keycloak.realms().realm(realm).flows();
 
-        T flowResource = createFlow(realm, flowId, flowAlias, parentFlowAlias, parentResource);
+        if (parentObject == null) {
+            var realmResource = createRealm(realmName);
+            if (includeRealm()) {
+                resources.add(realmResource);
+            }
+            parentObject = realmResource;
+        }
+
+        AuthenticationManagementResource flows = keycloak.realms().realm(realmName).flows();
+
+        T flowResource = createFlow(realmName, flowId, flowAlias, parentFlowAlias, flowExecution, parentObject);
         resources.add(flowResource);
         System.out.println("\t".repeat(level) + flowResource);
 
         flows.getExecutions(flowAlias).forEach(execution -> {
             if (execution.getLevel() == 0) { // Listing only top level for each subflow to avoid duplication
                 if (execution.getAuthenticationFlow() != null && execution.getAuthenticationFlow()) {
-                    var subflowResources = generate(realm, execution.getDisplayName(), execution.getFlowId(),
-                        flowAlias, flowResource, level + 1);
+                    var subflowResources = generate(realmName, execution.getDisplayName(), execution.getFlowId(),
+                        flowAlias,
+                        execution, flowResource, level + 1);
                     resources.addAll(subflowResources);
                 } else {
                     String flowPrefix = getFlowPrefix(flowAlias);
-                    T executionResource = createExecution(realm, flowAlias, flowPrefix, execution, flowResource);
+                    T executionResource = createExecution(realmName, flowAlias, flowPrefix, execution, flowResource);
                     resources.add(executionResource);
                     System.out.println("\t".repeat(level) + " * " + executionResource);
 
@@ -54,7 +64,7 @@ public abstract class AbstractAuthenticationFlowProcessor<T extends TerraformObj
                         ? Optional.of(flows.getAuthenticatorConfig(execution.getAuthenticationConfig()))
                         : Optional.empty();
                     config.ifPresent(c -> {
-                        T executionConfigResource = createExecutionConfig(realm, flowPrefix, execution, c,
+                        T executionConfigResource = createExecutionConfig(realmName, flowPrefix, execution, c,
                             executionResource);
                         resources.add(executionConfigResource);
                         System.out.println("\t".repeat(level) + "  \\_ " + executionConfigResource);
@@ -67,16 +77,20 @@ public abstract class AbstractAuthenticationFlowProcessor<T extends TerraformObj
 
     protected abstract T createExecutionConfig(String realm, String flowPrefix,
         AuthenticationExecutionInfoRepresentation execution, AuthenticatorConfigRepresentation executionConfig,
-        TerraformObject parentResource);
+        TerraformObject parentObject);
 
     protected abstract T createExecution(String realm, String parentFlowAlias, String flowPrefix,
-        AuthenticationExecutionInfoRepresentation execution, TerraformObject parentResource);
+        AuthenticationExecutionInfoRepresentation execution, TerraformObject parentObject);
 
     protected abstract T createFlow(String realm, String flowId, String flowAlias, String parentFlowAlias,
-        TerraformObject parentResource);
+        AuthenticationExecutionInfoRepresentation flowExecution, TerraformObject parentObject);
+
+    protected abstract T createRealm(String realmName);
+
+    protected abstract boolean includeRealm();
 
     private static String getFlowPrefix(String flowAlias) {
-        String sanitizedFlowAlias = sanitizeAlias(flowAlias);
+        String sanitizedFlowAlias = sanitizeName(flowAlias);
         String prefix = sanitizedFlowAlias.split("_").length > 1
             ? WordUtils.initials(sanitizedFlowAlias, '_')
             : sanitizedFlowAlias;
@@ -85,7 +99,7 @@ public abstract class AbstractAuthenticationFlowProcessor<T extends TerraformObj
         return StringUtils.left(prefix, 4) + "_" + fourDigitHash + "_";
     }
 
-    protected static String sanitizeAlias(String alias) {
+    protected static String sanitizeName(String alias) {
         return StringUtils.stripEnd(alias
             .replaceAll("-", "_")
             .replaceAll("[^a-zA-Z0-9]+", "_")

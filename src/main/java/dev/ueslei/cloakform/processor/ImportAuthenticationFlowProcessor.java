@@ -1,7 +1,7 @@
 package dev.ueslei.cloakform.processor;
 
-import dev.ueslei.cloakform.model.TerraformObject;
 import dev.ueslei.cloakform.model.TerraformImport;
+import dev.ueslei.cloakform.model.TerraformObject;
 import dev.ueslei.cloakform.model.TerraformResource;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.Keycloak;
@@ -42,12 +42,25 @@ public class ImportAuthenticationFlowProcessor extends AbstractAuthenticationFlo
 
     @Override
     public TerraformImport createFlow(String realm, String flowId, String flowAlias,
-        String parentFlowAlias, TerraformObject parentResource) {
-        TerraformResource resource = processor.createFlow(realm, flowId, flowAlias, parentFlowAlias, parentResource);
+        String parentFlowAlias, AuthenticationExecutionInfoRepresentation flowExecution,
+        TerraformObject parentResource) {
+        TerraformResource resource = processor.createFlow(realm, flowId, flowAlias, parentFlowAlias, flowExecution,
+            parentResource);
         String terraformFlowId = parentFlowAlias == null
             ? String.format("%s/%s", realm, flowId)
             : String.format("%s/%s/%s", realm, parentFlowAlias, flowId);
         return new TerraformImport(terraformFlowId, resource.getResource(), resource.getName());
+    }
+
+    @Override
+    protected TerraformImport createRealm(String realmName) {
+        TerraformResource resource = processor.createRealm(realmName);
+        return new TerraformImport(realmName, resource.getResource(), resource.getName());
+    }
+
+    @Override
+    protected boolean includeRealm() {
+        return true;
     }
 
 }

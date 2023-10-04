@@ -33,10 +33,10 @@ public class TerraformObjectWriter<T extends TerraformObject> {
         return factory;
     }
 
-    public void write(List<T> resources, String outFile) throws IOException {
+    public void write(List<T> objects, String outFile) throws IOException {
         try (BufferedWriter writer = Files.newBufferedWriter(Path.of(outFile),
             StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-            resources.forEach(obj -> {
+            objects.forEach(obj -> {
                 try {
                     mustache.execute(writer, obj);
                     writer.newLine();
