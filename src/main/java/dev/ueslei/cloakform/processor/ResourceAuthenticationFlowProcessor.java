@@ -17,6 +17,7 @@ import org.keycloak.representations.idm.AuthenticationExecutionInfoRepresentatio
 import org.keycloak.representations.idm.AuthenticationFlowRepresentation;
 import org.keycloak.representations.idm.AuthenticatorConfigRepresentation;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 @Slf4j
 @Component
@@ -65,9 +66,9 @@ public class ResourceAuthenticationFlowProcessor extends AbstractAuthenticationF
     private void addExecutionDependencyAttribute(AuthenticationFlowRepresentation flow, String flowPrefix,
         AuthenticationExecutionInfoRepresentation execution, TerraformResource resource) {
         flow.getAuthenticationExecutions().stream()
-            .filter(e -> e.getAuthenticator().equals(execution.getProviderId()))
+            .filter(e -> execution.getProviderId().equals(e.getAuthenticator()))
             .findFirst().flatMap(e -> flow.getAuthenticationExecutions().stream()
-                .filter(o -> o.getPriority() < e.getPriority())
+                .filter(o -> o.getPriority() < e.getPriority() && StringUtils.hasText(o.getAuthenticator()))
                 .max(Comparator.comparing(AbstractAuthenticationExecutionRepresentation::getPriority)))
             .ifPresent(
                 dependency -> resource.addAttribute("depends_on",
