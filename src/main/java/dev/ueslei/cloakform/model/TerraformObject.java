@@ -3,9 +3,11 @@ package dev.ueslei.cloakform.model;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -28,25 +30,33 @@ public class TerraformObject {
 
     public Optional<String> getAttribute(String name) {
         return Optional.ofNullable(this.attributes.get(name))
-            .filter(a -> !AttributeType.MAP.equals(a.type()))
-            .map(Attribute::value)
-            .map(String::valueOf);
+            .map(this::getAttributeValue);
     }
 
+    /**
+     * Used by Mustache to render templates.
+     *
+     * @return Attribute handler.
+     */
     public Function<String, Object> handleAttribute() {
-        return (key) -> {
-            var attribute = attributes.get(key);
-            return switch (attribute.type()) {
-                case REFERENCE -> attribute.value().toString();
-                case STRING -> String.format("\"%s\"", attribute.value());
-                case MAP -> {
-                    try {
-                        yield MAPPER.writeValueAsString(attribute.value());
-                    } catch (JsonProcessingException e) {
-                        throw new RuntimeException(e);
-                    }
+        return (key) -> getAttributeValue(attributes.get(key));
+    }
+
+    private String getAttributeValue(Attribute attribute) {
+        return switch (attribute.type()) {
+            case REFERENCE -> attribute.value().toString();
+            case STRING -> String.format("\"%s\"", attribute.value());
+            case MAP -> {
+                try {
+                    yield MAPPER.writeValueAsString(attribute.value());
+                } catch (JsonProcessingException e) {
+                    throw new RuntimeException(e);
                 }
-            };
+            }
+            case LIST -> ((List<Attribute>) attribute.value())
+                .stream()
+                .map(this::getAttributeValue)
+                .collect(Collectors.joining(",", "[", "]"));
         };
     }
 

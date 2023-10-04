@@ -33,11 +33,11 @@ public class ImportAuthenticationFlowProcessor extends AbstractAuthenticationFlo
     }
 
     @Override
-    public TerraformImport createExecution(String realm, String parentFlowAlias,
+    public TerraformImport createExecution(String realm, AuthenticationFlowRepresentation flow,
         String flowPrefix, AuthenticationExecutionInfoRepresentation execution, TerraformObject parentResource) {
-        TerraformResource resource = processor.createExecution(realm, parentFlowAlias, flowPrefix, execution,
+        TerraformResource resource = processor.createExecution(realm, flow, flowPrefix, execution,
             parentResource);
-        String terraformExecutionId = String.format("%s/%s/%s", realm, parentFlowAlias, execution.getId());
+        String terraformExecutionId = String.format("%s/%s/%s", realm, flow.getAlias(), execution.getId());
         return new TerraformImport(terraformExecutionId, resource.getResource(), resource.getName());
     }
 

@@ -56,8 +56,7 @@ public abstract class AbstractAuthenticationFlowProcessor<T extends TerraformObj
                     resources.addAll(subflowResources);
                 } else {
                     String flowPrefix = getFlowPrefix(flow.getAlias());
-                    T executionResource = createExecution(realmName, flow.getAlias(), flowPrefix, execution,
-                        flowResource);
+                    T executionResource = createExecution(realmName, flow, flowPrefix, execution, flowResource);
                     resources.add(executionResource);
                     System.out.println("\t".repeat(level) + " * " + executionResource);
 
@@ -80,7 +79,7 @@ public abstract class AbstractAuthenticationFlowProcessor<T extends TerraformObj
         AuthenticationExecutionInfoRepresentation execution, AuthenticatorConfigRepresentation executionConfig,
         TerraformObject parentObject);
 
-    protected abstract T createExecution(String realm, String parentFlowAlias, String flowPrefix,
+    protected abstract T createExecution(String realm, AuthenticationFlowRepresentation flow, String flowPrefix,
         AuthenticationExecutionInfoRepresentation execution, TerraformObject parentObject);
 
     protected abstract T createFlow(String realm, String parentFlowAlias,
