@@ -6,6 +6,7 @@ import dev.ueslei.cloakform.model.TerraformResource;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.AuthenticationExecutionInfoRepresentation;
+import org.keycloak.representations.idm.AuthenticationFlowRepresentation;
 import org.keycloak.representations.idm.AuthenticatorConfigRepresentation;
 import org.springframework.stereotype.Component;
 
@@ -41,14 +42,12 @@ public class ImportAuthenticationFlowProcessor extends AbstractAuthenticationFlo
     }
 
     @Override
-    public TerraformImport createFlow(String realm, String flowId, String flowAlias,
-        String parentFlowAlias, AuthenticationExecutionInfoRepresentation flowExecution,
-        TerraformObject parentResource) {
-        TerraformResource resource = processor.createFlow(realm, flowId, flowAlias, parentFlowAlias, flowExecution,
-            parentResource);
+    public TerraformImport createFlow(String realm, String parentFlowAlias, AuthenticationFlowRepresentation flow,
+        AuthenticationExecutionInfoRepresentation flowExecution, TerraformObject parentResource) {
+        TerraformResource resource = processor.createFlow(realm, parentFlowAlias, flow, flowExecution, parentResource);
         String terraformFlowId = parentFlowAlias == null
-            ? String.format("%s/%s", realm, flowId)
-            : String.format("%s/%s/%s", realm, parentFlowAlias, flowId);
+            ? String.format("%s/%s", realm, flow.getId())
+            : String.format("%s/%s/%s", realm, parentFlowAlias, flow.getId());
         return new TerraformImport(terraformFlowId, resource.getResource(), resource.getName());
     }
 

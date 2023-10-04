@@ -9,6 +9,7 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.AuthenticationExecutionInfoRepresentation;
+import org.keycloak.representations.idm.AuthenticationFlowRepresentation;
 import org.keycloak.representations.idm.AuthenticatorConfigRepresentation;
 import org.springframework.stereotype.Component;
 
@@ -49,20 +50,19 @@ public class ResourceAuthenticationFlowProcessor extends AbstractAuthenticationF
     }
 
     @Override
-    public TerraformResource createFlow(String realm, String flowId, String flowAlias,
-        String parentFlowAlias, AuthenticationExecutionInfoRepresentation flowExecution,
-        TerraformObject parentResource) {
+    public TerraformResource createFlow(String realm, String parentFlowAlias, AuthenticationFlowRepresentation flow,
+        AuthenticationExecutionInfoRepresentation flowExecution, TerraformObject parentResource) {
         String terraformResource = parentFlowAlias == null
             ? "keycloak_authentication_flow"
             : "keycloak_authentication_subflow";
-        var resource = new TerraformResource(terraformResource, sanitizeName(flowAlias));
-        resource.addAttribute("alias", flowAlias);
+        var resource = new TerraformResource(terraformResource, sanitizeName(flow.getAlias()));
+        resource.addAttribute("alias", flow.getAlias());
         resource.addAttribute("realm_id", getRealmIdReference(parentResource), REFERENCE);
+        Optional.ofNullable(flow.getProviderId())
+            .ifPresent(v -> resource.addAttribute("provider_id", v));
         if (flowExecution != null) {
             Optional.ofNullable(flowExecution.getRequirement())
                 .ifPresent(v -> resource.addAttribute("requirement", v));
-            Optional.ofNullable(flowExecution.getProviderId())
-                .ifPresent(v -> resource.addAttribute("provider_id", v));
         }
         if (parentFlowAlias != null) {
             getParentResourceName(parentResource)

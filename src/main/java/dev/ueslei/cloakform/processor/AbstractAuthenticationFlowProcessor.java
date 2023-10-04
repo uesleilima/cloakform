@@ -11,6 +11,7 @@ import org.apache.commons.lang3.text.WordUtils;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.AuthenticationManagementResource;
 import org.keycloak.representations.idm.AuthenticationExecutionInfoRepresentation;
+import org.keycloak.representations.idm.AuthenticationFlowRepresentation;
 import org.keycloak.representations.idm.AuthenticatorConfigRepresentation;
 import org.springframework.stereotype.Component;
 
@@ -25,11 +26,11 @@ public abstract class AbstractAuthenticationFlowProcessor<T extends TerraformObj
         return keycloak.realms().realm(realmName).flows().getFlows().stream()
             .filter(f -> f.getAlias().equals(flowAlias))
             .findFirst()
-            .map(flow -> generate(realmName, flow.getAlias(), flow.getId(), null, null, null, 0))
+            .map(flow -> generate(realmName, flow, null, null, null, 0))
             .orElse(List.of());
     }
 
-    public List<T> generate(String realmName, String flowAlias, String flowId, String parentFlowAlias,
+    public List<T> generate(String realmName, AuthenticationFlowRepresentation flow, String parentFlowAlias,
         AuthenticationExecutionInfoRepresentation flowExecution, TerraformObject parentObject, int level) {
         List<T> resources = new ArrayList<>();
 
@@ -41,22 +42,22 @@ public abstract class AbstractAuthenticationFlowProcessor<T extends TerraformObj
             parentObject = realmResource;
         }
 
-        AuthenticationManagementResource flows = keycloak.realms().realm(realmName).flows();
-
-        T flowResource = createFlow(realmName, flowId, flowAlias, parentFlowAlias, flowExecution, parentObject);
+        T flowResource = createFlow(realmName, parentFlowAlias, flow, flowExecution, parentObject);
         resources.add(flowResource);
         System.out.println("\t".repeat(level) + flowResource);
 
-        flows.getExecutions(flowAlias).forEach(execution -> {
+        AuthenticationManagementResource flows = keycloak.realms().realm(realmName).flows();
+        flows.getExecutions(flow.getAlias()).forEach(execution -> {
             if (execution.getLevel() == 0) { // Listing only top level for each subflow to avoid duplication
                 if (execution.getAuthenticationFlow() != null && execution.getAuthenticationFlow()) {
-                    var subflowResources = generate(realmName, execution.getDisplayName(), execution.getFlowId(),
-                        flowAlias,
-                        execution, flowResource, level + 1);
+                    var subflow = flows.getFlow(execution.getFlowId());
+                    var subflowResources = generate(realmName, subflow, flow.getAlias(), execution, flowResource,
+                        level + 1);
                     resources.addAll(subflowResources);
                 } else {
-                    String flowPrefix = getFlowPrefix(flowAlias);
-                    T executionResource = createExecution(realmName, flowAlias, flowPrefix, execution, flowResource);
+                    String flowPrefix = getFlowPrefix(flow.getAlias());
+                    T executionResource = createExecution(realmName, flow.getAlias(), flowPrefix, execution,
+                        flowResource);
                     resources.add(executionResource);
                     System.out.println("\t".repeat(level) + " * " + executionResource);
 
@@ -82,8 +83,9 @@ public abstract class AbstractAuthenticationFlowProcessor<T extends TerraformObj
     protected abstract T createExecution(String realm, String parentFlowAlias, String flowPrefix,
         AuthenticationExecutionInfoRepresentation execution, TerraformObject parentObject);
 
-    protected abstract T createFlow(String realm, String flowId, String flowAlias, String parentFlowAlias,
-        AuthenticationExecutionInfoRepresentation flowExecution, TerraformObject parentObject);
+    protected abstract T createFlow(String realm, String parentFlowAlias,
+        AuthenticationFlowRepresentation flow, AuthenticationExecutionInfoRepresentation flowExecution,
+        TerraformObject parentObject);
 
     protected abstract T createRealm(String realmName);
 
