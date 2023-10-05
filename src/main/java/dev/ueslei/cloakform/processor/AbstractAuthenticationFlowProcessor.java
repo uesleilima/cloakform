@@ -22,12 +22,11 @@ public abstract class AbstractAuthenticationFlowProcessor<T extends TerraformObj
 
     private final Keycloak keycloak;
 
-    public List<T> generate(String realmName, String flowAlias) {
+    public List<T> generate(String realmName, Optional<String> flowAlias) {
         return keycloak.realms().realm(realmName).flows().getFlows().stream()
-            .filter(f -> f.getAlias().equals(flowAlias))
-            .findFirst()
-            .map(flow -> generate(realmName, flow, null, null, null, 0))
-            .orElse(List.of());
+            .filter(f -> flowAlias.isEmpty() || f.getAlias().equals(flowAlias.get()))
+            .flatMap(flow -> generate(realmName, flow, null, null, null, 0).stream())
+            .toList();
     }
 
     public List<T> generate(String realmName, AuthenticationFlowRepresentation flow,
@@ -36,38 +35,37 @@ public abstract class AbstractAuthenticationFlowProcessor<T extends TerraformObj
         List<T> resources = new ArrayList<>();
 
         if (parentObject == null) {
-            var realmResource = createRealm(realmName);
+            var realmObject = createRealm(realmName);
             if (includeRealm()) {
-                resources.add(realmResource);
+                resources.add(realmObject);
             }
-            parentObject = realmResource;
+            parentObject = realmObject;
         }
 
-        T flowResource = createFlow(realmName, parentFlow, flow, flowExecution, parentObject);
-        resources.add(flowResource);
-        System.out.println("\t".repeat(level) + flowResource);
+        T flowObject = createFlow(realmName, parentFlow, flow, flowExecution, parentObject);
+        resources.add(flowObject);
+        System.out.println("\t".repeat(level) + flowObject);
 
         AuthenticationManagementResource flows = keycloak.realms().realm(realmName).flows();
         flows.getExecutions(flow.getAlias()).forEach(execution -> {
             if (execution.getLevel() == 0) { // Listing only top level for each subflow to avoid duplication
                 if (execution.getAuthenticationFlow() != null && execution.getAuthenticationFlow()) {
                     var subflow = flows.getFlow(execution.getFlowId());
-                    var subflowResources = generate(realmName, subflow, flow, execution, flowResource,
-                        level + 1);
+                    var subflowResources = generate(realmName, subflow, flow, execution, flowObject, level + 1);
                     resources.addAll(subflowResources);
                 } else {
-                    T executionResource = createExecution(realmName, flow, execution, flowResource);
-                    resources.add(executionResource);
-                    System.out.println("\t".repeat(level) + " * " + executionResource);
+                    T executionObject = createExecution(realmName, flow, execution, flowObject);
+                    resources.add(executionObject);
+                    System.out.println("\t".repeat(level) + " * " + executionObject);
 
                     Optional<AuthenticatorConfigRepresentation> config = execution.getAuthenticationConfig() != null
                         ? Optional.of(flows.getAuthenticatorConfig(execution.getAuthenticationConfig()))
                         : Optional.empty();
                     config.ifPresent(c -> {
-                        T executionConfigResource = createExecutionConfig(realmName, getFlowPrefix(flow.getAlias()),
-                            execution, c, executionResource);
-                        resources.add(executionConfigResource);
-                        System.out.println("\t".repeat(level) + "  \\_ " + executionConfigResource);
+                        T executionConfigObject = createExecutionConfig(realmName, getFlowPrefix(flow.getAlias()),
+                            execution, c, executionObject);
+                        resources.add(executionConfigObject);
+                        System.out.println("\t".repeat(level) + "  \\_ " + executionConfigObject);
                     });
                 }
             }

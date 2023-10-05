@@ -33,8 +33,8 @@ public class TerraformObjectWriter<T extends TerraformObject> {
         return factory;
     }
 
-    public void write(List<T> objects, String outFile) throws IOException {
-        try (BufferedWriter writer = Files.newBufferedWriter(Path.of(outFile),
+    public void write(List<T> objects, Path outFile) throws IOException {
+        try (BufferedWriter writer = Files.newBufferedWriter(outFile,
             StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
             objects.forEach(obj -> {
                 try {

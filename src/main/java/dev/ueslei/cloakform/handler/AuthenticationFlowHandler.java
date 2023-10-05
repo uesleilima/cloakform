@@ -7,14 +7,18 @@ import dev.ueslei.cloakform.processor.ResourceAuthenticationFlowProcessor;
 import dev.ueslei.cloakform.writer.TerraformImportWriter;
 import dev.ueslei.cloakform.writer.TerraformResourceWriter;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.shell.standard.ShellCommandGroup;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
 import org.springframework.shell.standard.ShellOption;
 
 @ShellComponent
 @RequiredArgsConstructor
+@ShellCommandGroup("Authentication Flow Generator")
 public class AuthenticationFlowHandler {
 
     private final ImportAuthenticationFlowProcessor importProcessor;
@@ -23,26 +27,30 @@ public class AuthenticationFlowHandler {
     private final ResourceAuthenticationFlowProcessor resourceProcessor;
     private final TerraformResourceWriter resourceWriter;
 
-    @ShellMethod("Generates terraform file with Authentication Flows imports.")
-    public void imports(
+    @ShellMethod(value = "Generates terraform file with Authentication Flows imports.", key = "flow imports")
+    public void generateImports(
         @ShellOption(value = {"-r", "--realm"}) String realm,
         @ShellOption(value = {"-f", "--flow"}) String flowAlias,
-        @ShellOption(value = {"-o", "--output"}, defaultValue = "/tmp/flows_imports.tf") String output)
+        @ShellOption(value = {"-o", "--output"}, defaultValue = "flow_imports.tf") String output)
         throws IOException {
 
-        List<TerraformImport> imports = importProcessor.generate(realm, flowAlias);
-        importWriter.write(imports, output);
+        List<TerraformImport> imports = importProcessor.generate(realm, Optional.of(flowAlias));
+        var outFile = Path.of(output);
+        importWriter.write(imports, outFile);
+        System.out.println("File generated: " + outFile.toAbsolutePath());
     }
 
-    @ShellMethod("Generates terraform file with Authentication Flows resources.")
-    public void resources(
+    @ShellMethod(value = "Generates terraform file with Authentication Flows resources.", key = "flow resources")
+    public void generateResources(
         @ShellOption(value = {"-r", "--realm"}) String realm,
         @ShellOption(value = {"-f", "--flow"}) String flowAlias,
-        @ShellOption(value = {"-o", "--output"}, defaultValue = "/tmp/flows_resources.tf") String output)
+        @ShellOption(value = {"-o", "--output"}, defaultValue = "flow_resources.tf") String output)
         throws IOException {
 
-        List<TerraformResource> resources = resourceProcessor.generate(realm, flowAlias);
-        resourceWriter.write(resources, output);
+        List<TerraformResource> resources = resourceProcessor.generate(realm, Optional.of(flowAlias));
+        var outFile = Path.of(output);
+        resourceWriter.write(resources, outFile);
+        System.out.println("File generated: " + outFile.toAbsolutePath());
     }
 
 }
