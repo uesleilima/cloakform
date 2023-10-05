@@ -2,21 +2,26 @@ package dev.ueslei.cloakform.config;
 
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+@EnableConfigurationProperties(KeycloakProperties.class)
 public class KeycloakConfiguration {
 
     @Bean
-    public Keycloak keycloak() {
+    public Keycloak keycloak(KeycloakProperties properties) {
         return KeycloakBuilder.builder()
-            .serverUrl("http://localhost:8181/auth")
-            .realm("master")
-            .clientId("admin-cli")
-            .grantType("password")
-            .username("admin")
-            .password("admin")
+            .serverUrl(properties.getServerUrl())
+            .realm(properties.getRealm())
+            .clientId(properties.getClientId())
+            .clientSecret(properties.getClientSecret())
+            .grantType(properties.getGrantType())
+            .username(properties.getUsername())
+            .password(properties.getPassword())
+            .authorization(properties.getAuthorization())
+            .scope(properties.getScope())
             .build();
     }
 

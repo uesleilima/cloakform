@@ -1,6 +1,7 @@
-package dev.ueslei.cloakform.processor;
+package dev.ueslei.cloakform.processor.flow;
 
 import dev.ueslei.cloakform.model.TerraformObject;
+import dev.ueslei.cloakform.util.Helpers;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -18,7 +19,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public abstract class AbstractAuthenticationFlowProcessor<T extends TerraformObject> {
+public abstract class AuthenticationFlowObjectProcessor<T extends TerraformObject> {
 
     private final Keycloak keycloak;
 
@@ -95,20 +96,13 @@ public abstract class AbstractAuthenticationFlowProcessor<T extends TerraformObj
      * @return The alias initials together with a hash code of it.
      */
     protected static String getFlowPrefix(String flowAlias) {
-        String sanitizedFlowAlias = sanitizeName(flowAlias);
+        String sanitizedFlowAlias = Helpers.sanitizeName(flowAlias);
         String prefix = sanitizedFlowAlias.split("_").length > 1
             ? WordUtils.initials(sanitizedFlowAlias, '_')
             : sanitizedFlowAlias;
         int hashCode = Math.abs(flowAlias.hashCode());
         int fourDigitHash = hashCode % 10000;
         return StringUtils.left(prefix, 4) + "_" + fourDigitHash + "_";
-    }
-
-    protected static String sanitizeName(String name) {
-        return StringUtils.stripEnd(name
-            .replaceAll("-", "_")
-            .replaceAll("[^a-zA-Z0-9]+", "_")
-            .toLowerCase(), "_");
     }
 
 }

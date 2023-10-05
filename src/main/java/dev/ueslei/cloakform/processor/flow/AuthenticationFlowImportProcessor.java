@@ -1,4 +1,4 @@
-package dev.ueslei.cloakform.processor;
+package dev.ueslei.cloakform.processor.flow;
 
 import dev.ueslei.cloakform.model.TerraformImport;
 import dev.ueslei.cloakform.model.TerraformObject;
@@ -12,11 +12,11 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-public class ImportAuthenticationFlowProcessor extends AbstractAuthenticationFlowProcessor<TerraformImport> {
+public class AuthenticationFlowImportProcessor extends AuthenticationFlowObjectProcessor<TerraformImport> {
 
-    private final ResourceAuthenticationFlowProcessor processor;
+    private final AuthenticationFlowResourceProcessor processor;
 
-    public ImportAuthenticationFlowProcessor(Keycloak keycloak, ResourceAuthenticationFlowProcessor processor) {
+    public AuthenticationFlowImportProcessor(Keycloak keycloak, AuthenticationFlowResourceProcessor processor) {
         super(keycloak);
         this.processor = processor;
     }

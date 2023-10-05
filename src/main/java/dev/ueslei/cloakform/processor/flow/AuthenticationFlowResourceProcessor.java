@@ -1,4 +1,4 @@
-package dev.ueslei.cloakform.processor;
+package dev.ueslei.cloakform.processor.flow;
 
 import static dev.ueslei.cloakform.model.AttributeType.LIST;
 import static dev.ueslei.cloakform.model.AttributeType.MAP;
@@ -7,6 +7,7 @@ import static dev.ueslei.cloakform.model.AttributeType.REFERENCE;
 import dev.ueslei.cloakform.model.Attribute;
 import dev.ueslei.cloakform.model.TerraformObject;
 import dev.ueslei.cloakform.model.TerraformResource;
+import dev.ueslei.cloakform.util.Helpers;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -21,7 +22,7 @@ import org.springframework.util.StringUtils;
 
 @Slf4j
 @Component
-public class ResourceAuthenticationFlowProcessor extends AbstractAuthenticationFlowProcessor<TerraformResource> {
+public class AuthenticationFlowResourceProcessor extends AuthenticationFlowObjectProcessor<TerraformResource> {
 
     public static final String KEYCLOAK_REALM = "keycloak_realm";
     public static final String KEYCLOAK_AUTHENTICATION_FLOW = "keycloak_authentication_flow";
@@ -29,7 +30,7 @@ public class ResourceAuthenticationFlowProcessor extends AbstractAuthenticationF
     public static final String KEYCLOAK_AUTHENTICATION_EXECUTION = "keycloak_authentication_execution";
     public static final String KEYCLOAK_AUTHENTICATION_EXECUTION_CONFIG = "keycloak_authentication_execution_config";
 
-    public ResourceAuthenticationFlowProcessor(Keycloak keycloak) {
+    public AuthenticationFlowResourceProcessor(Keycloak keycloak) {
         super(keycloak);
     }
 
@@ -38,7 +39,7 @@ public class ResourceAuthenticationFlowProcessor extends AbstractAuthenticationF
         AuthenticationExecutionInfoRepresentation execution, AuthenticatorConfigRepresentation executionConfig,
         TerraformObject parentResource) {
         var resource = new TerraformResource(KEYCLOAK_AUTHENTICATION_EXECUTION_CONFIG,
-            flowPrefix + sanitizeName(executionConfig.getAlias()));
+            flowPrefix + Helpers.sanitizeName(executionConfig.getAlias()));
         resource.addAttribute("alias", executionConfig.getAlias());
         resource.addAttribute("realm_id", getRealmIdReference(parentResource), REFERENCE);
         resource.addAttribute("config", executionConfig.getConfig(), MAP);
@@ -52,7 +53,7 @@ public class ResourceAuthenticationFlowProcessor extends AbstractAuthenticationF
         AuthenticationExecutionInfoRepresentation execution, TerraformObject parentResource) {
         String flowPrefix = getFlowPrefix(flow.getAlias());
         var resource = new TerraformResource(KEYCLOAK_AUTHENTICATION_EXECUTION,
-            flowPrefix + sanitizeName(execution.getProviderId()));
+            flowPrefix + Helpers.sanitizeName(execution.getProviderId()));
         resource.addAttribute("authenticator", execution.getProviderId());
         resource.addAttribute("realm_id", getRealmIdReference(parentResource), REFERENCE);
         resource.addAttribute("requirement", execution.getRequirement());
@@ -70,7 +71,7 @@ public class ResourceAuthenticationFlowProcessor extends AbstractAuthenticationF
         String terraformResource = parentFlow == null
             ? KEYCLOAK_AUTHENTICATION_FLOW
             : KEYCLOAK_AUTHENTICATION_SUBFLOW;
-        var resource = new TerraformResource(terraformResource, sanitizeName(flow.getAlias()));
+        var resource = new TerraformResource(terraformResource, Helpers.sanitizeName(flow.getAlias()));
         resource.addAttribute("alias", flow.getAlias());
         resource.addAttribute("realm_id", getRealmIdReference(parentResource), REFERENCE);
         Optional.ofNullable(flow.getProviderId())
@@ -100,16 +101,16 @@ public class ResourceAuthenticationFlowProcessor extends AbstractAuthenticationF
                 dependency -> {
                     String reference = StringUtils.hasText(dependency.getFlowAlias())
                         ? String.format("%s.%s", KEYCLOAK_AUTHENTICATION_SUBFLOW,
-                        sanitizeName(dependency.getFlowAlias()))
+                        Helpers.sanitizeName(dependency.getFlowAlias()))
                         : String.format("%s.%s%s", KEYCLOAK_AUTHENTICATION_EXECUTION, flowPrefix,
-                            sanitizeName(dependency.getAuthenticator()));
+                            Helpers.sanitizeName(dependency.getAuthenticator()));
                     resource.addAttribute("depends_on", List.of(new Attribute(REFERENCE, reference)), LIST);
                 });
     }
 
     @Override
     protected TerraformResource createRealm(String realmName) {
-        TerraformResource realmResource = new TerraformResource(KEYCLOAK_REALM, sanitizeName(realmName));
+        TerraformResource realmResource = new TerraformResource(KEYCLOAK_REALM, Helpers.sanitizeName(realmName));
         realmResource.addAttribute("realm", realmName);
         return realmResource;
     }
