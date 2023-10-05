@@ -8,6 +8,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.ClientRepresentation;
+import org.keycloak.representations.idm.ProtocolMapperRepresentation;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -34,10 +35,26 @@ public class ClientImportProcessor {
         imports.add(clientImport);
         System.out.println(clientImport);
 
+        if (client.getProtocolMappers() != null) {
+            imports.addAll(client.getProtocolMappers()
+                .stream()
+                .map(m -> createProtocolMapper(realm, client, m))
+                .peek(System.out::println)
+                .toList());
+        }
+
 //        client role mapper - keycloak_generic_role_mapper
-//        client mapper - keycloak_generic_protocol_mapper
 
         return imports;
+    }
+
+    private TerraformImport createProtocolMapper(String realm, ClientRepresentation client,
+        ProtocolMapperRepresentation mapper) {
+        String terraformId = String.format("%s/client/%s/%s", realm, client.getId(), mapper.getId());
+        String resource = "keycloak_generic_protocol_mapper";
+        String resourceName = String.format("%s_%s", Helpers.sanitizeName(client.getClientId()),
+            Helpers.sanitizeName(mapper.getName()));
+        return new TerraformImport(terraformId, resource, resourceName);
     }
 
     private TerraformImport createClient(String realm, ClientRepresentation client) {
