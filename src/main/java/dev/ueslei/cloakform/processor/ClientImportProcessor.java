@@ -2,6 +2,7 @@ package dev.ueslei.cloakform.processor;
 
 import dev.ueslei.cloakform.model.TerraformImport;
 import dev.ueslei.cloakform.util.Helpers;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -23,8 +24,20 @@ public class ClientImportProcessor {
                 .clients()
                 .findAll())
             .stream()
-            .map(client -> createClient(realm, client))
+            .flatMap(client -> generate(realm, client).stream())
             .toList();
+    }
+
+    public List<TerraformImport> generate(String realm, ClientRepresentation client) {
+        List<TerraformImport> imports = new ArrayList<>();
+        var clientImport = createClient(realm, client);
+        imports.add(clientImport);
+        System.out.println(clientImport);
+
+//        client role mapper - keycloak_generic_role_mapper
+//        client mapper - keycloak_generic_protocol_mapper
+
+        return imports;
     }
 
     private TerraformImport createClient(String realm, ClientRepresentation client) {
@@ -32,7 +45,6 @@ public class ClientImportProcessor {
         String resource =
             client.getProtocol().equals("openid-connect") ? "keycloak_openid_client" : "keycloak_saml_client";
         String resourceName = Helpers.sanitizeName(client.getClientId());
-        System.out.println(resourceName);
         return new TerraformImport(terraformId, resource, resourceName);
     }
 }

@@ -35,6 +35,10 @@ public class AuthenticationFlowHandler {
         throws IOException {
 
         List<TerraformImport> imports = importProcessor.generate(realm, Helpers.optional(flowAlias));
+        if (imports.isEmpty()){
+            System.out.println("No objects found");
+            return;
+        }
         var outFile = Path.of(output);
         importWriter.write(imports, outFile);
         System.out.println("File generated: " + outFile.toAbsolutePath());
@@ -48,6 +52,10 @@ public class AuthenticationFlowHandler {
         throws IOException {
 
         List<TerraformResource> resources = resourceProcessor.generate(realm, Helpers.optional(flowAlias));
+        if (resources.isEmpty()){
+            System.out.println("No objects found");
+            return;
+        }
         var outFile = Path.of(output);
         resourceWriter.write(resources, outFile);
         System.out.println("File generated: " + outFile.toAbsolutePath());

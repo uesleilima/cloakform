@@ -33,31 +33,31 @@ public abstract class AuthenticationFlowObjectProcessor<T extends TerraformObjec
     public List<T> generate(String realmName, AuthenticationFlowRepresentation flow,
         AuthenticationFlowRepresentation parentFlow, AuthenticationExecutionInfoRepresentation flowExecution,
         TerraformObject parentObject, int level) {
-        List<T> resources = new ArrayList<>();
+        List<T> objects = new ArrayList<>();
 
         if (parentObject == null) {
-            var realmObject = createRealm(realmName);
+            T realmObject = createRealm(realmName);
             if (includeRealm()) {
-                resources.add(realmObject);
+                objects.add(realmObject);
             }
             parentObject = realmObject;
         }
 
         T flowObject = createFlow(realmName, parentFlow, flow, flowExecution, parentObject);
-        resources.add(flowObject);
-        System.out.println("\t".repeat(level) + flowObject);
+        objects.add(flowObject);
+        System.out.printf("%s%s%n", "\t".repeat(level), flowObject);
 
         AuthenticationManagementResource flows = keycloak.realms().realm(realmName).flows();
         flows.getExecutions(flow.getAlias()).forEach(execution -> {
             if (execution.getLevel() == 0) { // Listing only top level for each subflow to avoid duplication
                 if (execution.getAuthenticationFlow() != null && execution.getAuthenticationFlow()) {
-                    var subflow = flows.getFlow(execution.getFlowId());
-                    var subflowResources = generate(realmName, subflow, flow, execution, flowObject, level + 1);
-                    resources.addAll(subflowResources);
+                    AuthenticationFlowRepresentation subflow = flows.getFlow(execution.getFlowId());
+                    List<T> subflowObjects = generate(realmName, subflow, flow, execution, flowObject, level + 1);
+                    objects.addAll(subflowObjects);
                 } else {
                     T executionObject = createExecution(realmName, flow, execution, flowObject);
-                    resources.add(executionObject);
-                    System.out.println("\t".repeat(level) + " * " + executionObject);
+                    objects.add(executionObject);
+                    System.out.printf("%s * %s%n", "\t".repeat(level), executionObject);
 
                     Optional<AuthenticatorConfigRepresentation> config = execution.getAuthenticationConfig() != null
                         ? Optional.of(flows.getAuthenticatorConfig(execution.getAuthenticationConfig()))
@@ -65,13 +65,13 @@ public abstract class AuthenticationFlowObjectProcessor<T extends TerraformObjec
                     config.ifPresent(c -> {
                         T executionConfigObject = createExecutionConfig(realmName, getFlowPrefix(flow.getAlias()),
                             execution, c, executionObject);
-                        resources.add(executionConfigObject);
-                        System.out.println("\t".repeat(level) + "  \\_ " + executionConfigObject);
+                        objects.add(executionConfigObject);
+                        System.out.printf("%s \\_ %s%n", "\t".repeat(level), executionConfigObject);
                     });
                 }
             }
         });
-        return resources;
+        return objects;
     }
 
     protected abstract T createExecutionConfig(String realm, String flowPrefix,

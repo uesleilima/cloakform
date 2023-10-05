@@ -1,7 +1,7 @@
 package dev.ueslei.cloakform.handler;
 
 import dev.ueslei.cloakform.model.TerraformImport;
-import dev.ueslei.cloakform.processor.ClientImportProcessor;
+import dev.ueslei.cloakform.processor.RealmImportProcessor;
 import dev.ueslei.cloakform.util.Helpers;
 import dev.ueslei.cloakform.writer.TerraformImportWriter;
 import java.io.IOException;
@@ -15,20 +15,19 @@ import org.springframework.shell.standard.ShellOption;
 
 @ShellComponent
 @RequiredArgsConstructor
-@ShellCommandGroup("Client Generator")
-public class ClientHandler {
+@ShellCommandGroup("Realm Generator")
+public class RealmHandler {
 
-    private final ClientImportProcessor importProcessor;
+    private final RealmImportProcessor importProcessor;
     private final TerraformImportWriter importWriter;
 
-    @ShellMethod(value = "Generates terraform file with Clients imports.", key = "client imports")
+    @ShellMethod(value = "Generates terraform file with Realm imports.", key = "realm imports")
     public void generateImports(
-        @ShellOption(value = {"-r", "--realm"}) String realm,
-        @ShellOption(value = {"-c", "--client-id"}, defaultValue = ShellOption.NULL) String clientId,
-        @ShellOption(value = {"-o", "--output"}, defaultValue = "client_imports.tf") String output)
+        @ShellOption(value = {"-r", "--realm"}, defaultValue = ShellOption.NULL) String realm,
+        @ShellOption(value = {"-o", "--output"}, defaultValue = "realm_imports.tf") String output)
         throws IOException {
 
-        List<TerraformImport> imports = importProcessor.generate(realm, Helpers.optional(clientId));
+        List<TerraformImport> imports = importProcessor.generate(Helpers.optional(realm));
         if (imports.isEmpty()) {
             System.out.println("No objects found");
             return;
