@@ -49,7 +49,8 @@ public class ResourceAuthenticationFlowProcessor extends AbstractAuthenticationF
 
     @Override
     public TerraformResource createExecution(String realm, AuthenticationFlowRepresentation flow,
-        String flowPrefix, AuthenticationExecutionInfoRepresentation execution, TerraformObject parentResource) {
+        AuthenticationExecutionInfoRepresentation execution, TerraformObject parentResource) {
+        String flowPrefix = getFlowPrefix(flow.getAlias());
         var resource = new TerraformResource(KEYCLOAK_AUTHENTICATION_EXECUTION,
             flowPrefix + sanitizeName(execution.getProviderId()));
         resource.addAttribute("authenticator", execution.getProviderId());
@@ -57,30 +58,16 @@ public class ResourceAuthenticationFlowProcessor extends AbstractAuthenticationF
         resource.addAttribute("requirement", execution.getRequirement());
         getParentResourceName(parentResource)
             .ifPresent(name -> resource.addAttribute("parent_flow_alias", name + ".alias", REFERENCE));
-
-        addExecutionDependencyAttribute(flow, flowPrefix, execution, resource);
+        addDependencyAttribute(flow, flowPrefix, execution.getProviderId(), resource);
 
         return resource;
     }
 
-    private void addExecutionDependencyAttribute(AuthenticationFlowRepresentation flow, String flowPrefix,
-        AuthenticationExecutionInfoRepresentation execution, TerraformResource resource) {
-        flow.getAuthenticationExecutions().stream()
-            .filter(e -> execution.getProviderId().equals(e.getAuthenticator()))
-            .findFirst().flatMap(e -> flow.getAuthenticationExecutions().stream()
-                .filter(o -> o.getPriority() < e.getPriority() && StringUtils.hasText(o.getAuthenticator()))
-                .max(Comparator.comparing(AbstractAuthenticationExecutionRepresentation::getPriority)))
-            .ifPresent(
-                dependency -> resource.addAttribute("depends_on",
-                    List.of(new Attribute(REFERENCE,
-                        String.format("%s.%s%s", KEYCLOAK_AUTHENTICATION_EXECUTION, flowPrefix,
-                            sanitizeName(dependency.getAuthenticator())))), LIST));
-    }
-
     @Override
-    public TerraformResource createFlow(String realm, String parentFlowAlias, AuthenticationFlowRepresentation flow,
-        AuthenticationExecutionInfoRepresentation flowExecution, TerraformObject parentResource) {
-        String terraformResource = parentFlowAlias == null
+    public TerraformResource createFlow(String realm, AuthenticationFlowRepresentation parentFlow,
+        AuthenticationFlowRepresentation flow, AuthenticationExecutionInfoRepresentation flowExecution,
+        TerraformObject parentResource) {
+        String terraformResource = parentFlow == null
             ? KEYCLOAK_AUTHENTICATION_FLOW
             : KEYCLOAK_AUTHENTICATION_SUBFLOW;
         var resource = new TerraformResource(terraformResource, sanitizeName(flow.getAlias()));
@@ -92,11 +79,32 @@ public class ResourceAuthenticationFlowProcessor extends AbstractAuthenticationF
             Optional.ofNullable(flowExecution.getRequirement())
                 .ifPresent(v -> resource.addAttribute("requirement", v));
         }
-        if (parentFlowAlias != null) {
+        if (parentFlow != null) {
             getParentResourceName(parentResource)
                 .ifPresent(name -> resource.addAttribute("parent_flow_alias", name + ".alias", REFERENCE));
+            addDependencyAttribute(parentFlow, getFlowPrefix(parentFlow.getAlias()), flowExecution.getDisplayName(),
+                resource);
         }
+
         return resource;
+    }
+
+    private void addDependencyAttribute(AuthenticationFlowRepresentation flow, String flowPrefix, String name,
+        TerraformResource resource) {
+        flow.getAuthenticationExecutions().stream()
+            .filter(e -> name.equals(e.getAuthenticator()) || name.equals(e.getFlowAlias()))
+            .findFirst().flatMap(e -> flow.getAuthenticationExecutions().stream()
+                .filter(o -> o.getPriority() < e.getPriority())
+                .max(Comparator.comparing(AbstractAuthenticationExecutionRepresentation::getPriority)))
+            .ifPresent(
+                dependency -> {
+                    String reference = StringUtils.hasText(dependency.getFlowAlias())
+                        ? String.format("%s.%s", KEYCLOAK_AUTHENTICATION_SUBFLOW,
+                        sanitizeName(dependency.getFlowAlias()))
+                        : String.format("%s.%s%s", KEYCLOAK_AUTHENTICATION_EXECUTION, flowPrefix,
+                            sanitizeName(dependency.getAuthenticator()));
+                    resource.addAttribute("depends_on", List.of(new Attribute(REFERENCE, reference)), LIST);
+                });
     }
 
     @Override

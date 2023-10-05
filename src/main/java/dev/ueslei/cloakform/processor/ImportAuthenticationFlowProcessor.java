@@ -34,20 +34,20 @@ public class ImportAuthenticationFlowProcessor extends AbstractAuthenticationFlo
 
     @Override
     public TerraformImport createExecution(String realm, AuthenticationFlowRepresentation flow,
-        String flowPrefix, AuthenticationExecutionInfoRepresentation execution, TerraformObject parentResource) {
-        TerraformResource resource = processor.createExecution(realm, flow, flowPrefix, execution,
-            parentResource);
+        AuthenticationExecutionInfoRepresentation execution, TerraformObject parentResource) {
+        TerraformResource resource = processor.createExecution(realm, flow, execution, parentResource);
         String terraformExecutionId = String.format("%s/%s/%s", realm, flow.getAlias(), execution.getId());
         return new TerraformImport(terraformExecutionId, resource.getResource(), resource.getName());
     }
 
     @Override
-    public TerraformImport createFlow(String realm, String parentFlowAlias, AuthenticationFlowRepresentation flow,
-        AuthenticationExecutionInfoRepresentation flowExecution, TerraformObject parentResource) {
-        TerraformResource resource = processor.createFlow(realm, parentFlowAlias, flow, flowExecution, parentResource);
-        String terraformFlowId = parentFlowAlias == null
+    public TerraformImport createFlow(String realm, AuthenticationFlowRepresentation parentFlow,
+        AuthenticationFlowRepresentation flow, AuthenticationExecutionInfoRepresentation flowExecution,
+        TerraformObject parentResource) {
+        TerraformResource resource = processor.createFlow(realm, parentFlow, flow, flowExecution, parentResource);
+        String terraformFlowId = parentFlow == null
             ? String.format("%s/%s", realm, flow.getId())
-            : String.format("%s/%s/%s", realm, parentFlowAlias, flow.getId());
+            : String.format("%s/%s/%s", realm, parentFlow.getAlias(), flow.getId());
         return new TerraformImport(terraformFlowId, resource.getResource(), resource.getName());
     }
 
