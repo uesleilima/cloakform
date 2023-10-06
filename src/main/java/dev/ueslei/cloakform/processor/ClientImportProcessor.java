@@ -4,9 +4,11 @@ import dev.ueslei.cloakform.model.TerraformImport;
 import dev.ueslei.cloakform.util.Helpers;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.admin.client.Keycloak;
+import org.keycloak.representations.idm.ClientMappingsRepresentation;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.ProtocolMapperRepresentation;
 import org.springframework.stereotype.Component;
@@ -43,9 +45,29 @@ public class ClientImportProcessor {
                 .toList());
         }
 
-//        client role mapper - keycloak_generic_role_mapper
+        var clientMappings = keycloak.realm(realm).clients().get(client.getId())
+            .getScopeMappings()
+            .getAll()
+            .getClientMappings();
+        if (clientMappings != null) {
+            imports.addAll(clientMappings
+                .entrySet()
+                .stream()
+                .map(m -> createRoleMapper(realm, client, m))
+                .peek(System.out::println)
+                .toList());
+        }
 
         return imports;
+    }
+
+    private TerraformImport createRoleMapper(String realm, ClientRepresentation client,
+        Entry<String, ClientMappingsRepresentation> m) {
+        // terraformId: {{realmId}}/client/{{clientId}}/scope-mappings/{{roleClientId}}/{{roleId}}
+        String terraformId = String.format("%s/client/%s/scope-mappings/%s/%s", realm, client.getId(), m.getKey(),
+            m.getValue().getId());
+        String resourceName = String.format("%s_scope_map", Helpers.sanitizeName(client.getClientId()));
+        return new TerraformImport(terraformId, "keycloak_generic_role_mapper", resourceName);
     }
 
     private TerraformImport createProtocolMapper(String realm, ClientRepresentation client,
