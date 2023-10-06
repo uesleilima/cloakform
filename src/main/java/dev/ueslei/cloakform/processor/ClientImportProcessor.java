@@ -66,7 +66,7 @@ public class ClientImportProcessor {
         // terraformId: {{realmId}}/client/{{clientId}}/scope-mappings/{{roleClientId}}/{{roleId}}
         String terraformId = String.format("%s/client/%s/scope-mappings/%s/%s", realm, client.getId(), m.getKey(),
             m.getValue().getId());
-        String resourceName = String.format("%s_scope_map", Helpers.sanitizeName(client.getClientId()));
+        String resourceName = String.format("%s_role_map", Helpers.sanitizeName(client.getClientId()));
         return new TerraformImport(terraformId, "keycloak_generic_role_mapper", resourceName);
     }
 

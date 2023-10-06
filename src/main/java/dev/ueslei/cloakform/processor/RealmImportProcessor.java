@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.admin.client.Keycloak;
+import org.keycloak.representations.idm.GroupRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.springframework.stereotype.Component;
@@ -44,18 +45,43 @@ public class RealmImportProcessor {
 
         var defaultRolesImport = createDefaultRoles(realm.getRealm(), realm.getDefaultRole());
         imports.add(defaultRolesImport);
-        System.out.println(realmImport);
+        System.out.println(defaultRolesImport);
+
+        var groups = keycloak.realm(realm.getRealm())
+            .groups()
+            .groups();
+        if (groups != null) {
+            imports.addAll(groups.stream()
+                .map(g -> createGroup(realm.getRealm(), g))
+                .peek(System.out::println)
+                .toList());
+        }
+
+        if (!keycloak.realm(realm.getRealm()).getDefaultGroups().isEmpty()) {
+            var defaultGroupsImport = createDefaultGroups(realm.getRealm());
+            imports.add(defaultGroupsImport);
+            System.out.println(defaultGroupsImport);
+        }
 
         return imports;
     }
 
+    private TerraformImport createDefaultGroups(String realm) {
+        return new TerraformImport(realm, "keycloak_default_groups", "default");
+    }
+
+    private TerraformImport createGroup(String realm, GroupRepresentation group) {
+        return new TerraformImport(String.format("%s/%s", realm, group.getId()), "keycloak_group",
+            Helpers.sanitizeName(group.getName()));
+    }
+
     private TerraformImport createDefaultRoles(String realm, RoleRepresentation defaultRole) {
-        return new TerraformImport(String.format("%s.%s", realm, defaultRole.getId()), "keycloak_default_roles",
+        return new TerraformImport(String.format("%s/%s", realm, defaultRole.getId()), "keycloak_default_roles",
             Helpers.sanitizeName(defaultRole.getName()));
     }
 
     private TerraformImport createRole(String realm, RoleRepresentation roleRepresentation) {
-        return new TerraformImport(String.format("%s.%s", realm, roleRepresentation.getId()), "keycloak_role",
+        return new TerraformImport(String.format("%s/%s", realm, roleRepresentation.getId()), "keycloak_role",
             Helpers.sanitizeName(roleRepresentation.getName()));
     }
 
