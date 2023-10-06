@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
+import javax.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.ClientMappingsRepresentation;
@@ -20,15 +21,20 @@ public class ClientImportProcessor {
     private final Keycloak keycloak;
 
     public List<TerraformImport> generate(String realm, Optional<String> clientId) {
-        return clientId.map(cId -> keycloak.realm(realm)
-                .clients()
-                .findByClientId(cId))
-            .orElse(keycloak.realm(realm)
-                .clients()
-                .findAll())
-            .stream()
-            .flatMap(client -> generate(realm, client).stream())
-            .toList();
+        try {
+            return clientId.map(cId -> keycloak.realm(realm)
+                    .clients()
+                    .findByClientId(cId))
+                .orElse(keycloak.realm(realm)
+                    .clients()
+                    .findAll())
+                .stream()
+                .flatMap(client -> generate(realm, client).stream())
+                .toList();
+        } catch (NotFoundException ex) {
+            System.out.printf("Realm %s not found%n", realm);
+            return List.of();
+        }
     }
 
     public List<TerraformImport> generate(String realm, ClientRepresentation client) {

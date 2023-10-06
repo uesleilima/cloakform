@@ -5,6 +5,7 @@ import dev.ueslei.cloakform.util.Helpers;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import javax.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -24,10 +25,15 @@ public abstract class AuthenticationFlowObjectProcessor<T extends TerraformObjec
     private final Keycloak keycloak;
 
     public List<T> generate(String realmName, Optional<String> flowAlias) {
-        return keycloak.realms().realm(realmName).flows().getFlows().stream()
-            .filter(f -> flowAlias.isEmpty() || f.getAlias().equals(flowAlias.get()))
-            .flatMap(flow -> generate(realmName, flow, null, null, null, 0).stream())
-            .toList();
+        try {
+            return keycloak.realms().realm(realmName).flows().getFlows().stream()
+                .filter(f -> flowAlias.isEmpty() || f.getAlias().equals(flowAlias.get()))
+                .flatMap(flow -> generate(realmName, flow, null, null, null, 0).stream())
+                .toList();
+        } catch (NotFoundException ex) {
+            System.out.printf("Realm %s not found%n", realmName);
+            return List.of();
+        }
     }
 
     public List<T> generate(String realmName, AuthenticationFlowRepresentation flow,

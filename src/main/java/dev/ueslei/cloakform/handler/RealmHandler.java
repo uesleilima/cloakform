@@ -15,13 +15,13 @@ import org.springframework.shell.standard.ShellOption;
 
 @ShellComponent
 @RequiredArgsConstructor
-@ShellCommandGroup("Realm Generator")
+@ShellCommandGroup("CloakForm :: Realms")
 public class RealmHandler {
 
     private final RealmImportProcessor importProcessor;
     private final TerraformImportWriter importWriter;
 
-    @ShellMethod(value = "Generates terraform file with Realm imports.", key = "realm imports")
+    @ShellMethod(value = "Generates a Terraform configuration file with Realm imports.", key = "realm imports")
     public void generateImports(
         @ShellOption(value = {"-r", "--realm"}, defaultValue = ShellOption.NULL) String realm,
         @ShellOption(value = {"-o", "--output"}, defaultValue = "realm_imports.tf") String output)
@@ -29,7 +29,7 @@ public class RealmHandler {
 
         List<TerraformImport> imports = importProcessor.generate(Helpers.optional(realm));
         if (imports.isEmpty()) {
-            System.out.println("No objects found");
+            System.out.println("No imports found");
             return;
         }
         var outFile = Path.of(output);

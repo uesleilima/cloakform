@@ -15,13 +15,13 @@ import org.springframework.shell.standard.ShellOption;
 
 @ShellComponent
 @RequiredArgsConstructor
-@ShellCommandGroup("Client Generator")
+@ShellCommandGroup("CloakForm :: Clients")
 public class ClientHandler {
 
     private final ClientImportProcessor importProcessor;
     private final TerraformImportWriter importWriter;
 
-    @ShellMethod(value = "Generates terraform file with Clients imports.", key = "client imports")
+    @ShellMethod(value = "Generates a Terraform configuration file with Clients imports.", key = "client imports")
     public void generateImports(
         @ShellOption(value = {"-r", "--realm"}) String realm,
         @ShellOption(value = {"-c", "--client-id"}, defaultValue = ShellOption.NULL) String clientId,
@@ -30,7 +30,7 @@ public class ClientHandler {
 
         List<TerraformImport> imports = importProcessor.generate(realm, Helpers.optional(clientId));
         if (imports.isEmpty()) {
-            System.out.println("No objects found");
+            System.out.println("No imports found");
             return;
         }
         var outFile = Path.of(output);

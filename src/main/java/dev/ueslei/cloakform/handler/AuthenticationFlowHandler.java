@@ -18,7 +18,7 @@ import org.springframework.shell.standard.ShellOption;
 
 @ShellComponent
 @RequiredArgsConstructor
-@ShellCommandGroup("Authentication Flow Generator")
+@ShellCommandGroup("CloakForm :: Authentication Flows")
 public class AuthenticationFlowHandler {
 
     private final AuthenticationFlowImportProcessor importProcessor;
@@ -27,7 +27,7 @@ public class AuthenticationFlowHandler {
     private final AuthenticationFlowResourceProcessor resourceProcessor;
     private final TerraformResourceWriter resourceWriter;
 
-    @ShellMethod(value = "Generates terraform file with Authentication Flows imports.", key = "flow imports")
+    @ShellMethod(value = "Generates a Terraform configuration file with Authentication Flows imports.", key = "flow imports")
     public void generateImports(
         @ShellOption(value = {"-r", "--realm"}) String realm,
         @ShellOption(value = {"-f", "--flow"}, defaultValue = ShellOption.NULL) String flowAlias,
@@ -36,7 +36,7 @@ public class AuthenticationFlowHandler {
 
         List<TerraformImport> imports = importProcessor.generate(realm, Helpers.optional(flowAlias));
         if (imports.isEmpty()){
-            System.out.println("No objects found");
+            System.out.println("No imports found");
             return;
         }
         var outFile = Path.of(output);
@@ -44,7 +44,7 @@ public class AuthenticationFlowHandler {
         System.out.println("File generated: " + outFile.toAbsolutePath());
     }
 
-    @ShellMethod(value = "Generates terraform file with Authentication Flows resources.", key = "flow resources")
+    @ShellMethod(value = "Generates a Terraform configuration file with Authentication Flows resources.", key = "flow resources")
     public void generateResources(
         @ShellOption(value = {"-r", "--realm"}) String realm,
         @ShellOption(value = {"-f", "--flow"}, defaultValue = ShellOption.NULL) String flowAlias,
@@ -53,7 +53,7 @@ public class AuthenticationFlowHandler {
 
         List<TerraformResource> resources = resourceProcessor.generate(realm, Helpers.optional(flowAlias));
         if (resources.isEmpty()){
-            System.out.println("No objects found");
+            System.out.println("No resources found");
             return;
         }
         var outFile = Path.of(output);

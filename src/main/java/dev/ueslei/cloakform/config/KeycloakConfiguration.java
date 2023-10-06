@@ -12,7 +12,7 @@ public class KeycloakConfiguration {
 
     @Bean
     public Keycloak keycloak(KeycloakProperties properties) {
-        System.out.printf("Connecting to Keycloak on %s%n", properties.getServerUrl());
+        System.out.printf("You are connecting to Keycloak at %s%n", properties.getServerUrl());
         return KeycloakBuilder.builder()
             .serverUrl(properties.getServerUrl())
             .realm(properties.getRealm())
