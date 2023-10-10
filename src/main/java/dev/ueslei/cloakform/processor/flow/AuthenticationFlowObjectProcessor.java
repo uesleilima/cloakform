@@ -2,10 +2,10 @@ package dev.ueslei.cloakform.processor.flow;
 
 import dev.ueslei.cloakform.model.TerraformObject;
 import dev.ueslei.cloakform.util.Helpers;
+import jakarta.ws.rs.NotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import javax.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;

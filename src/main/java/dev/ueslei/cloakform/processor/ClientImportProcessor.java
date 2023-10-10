@@ -2,11 +2,11 @@ package dev.ueslei.cloakform.processor;
 
 import dev.ueslei.cloakform.model.TerraformImport;
 import dev.ueslei.cloakform.util.Helpers;
+import jakarta.ws.rs.NotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
-import javax.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.ClientMappingsRepresentation;
