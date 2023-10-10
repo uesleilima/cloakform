@@ -74,6 +74,7 @@ public class AuthenticationFlowResourceProcessor extends AuthenticationFlowObjec
         var resource = new TerraformResource(terraformResource, Helpers.sanitizeName(flow.getAlias()));
         resource.addAttribute("alias", flow.getAlias());
         resource.addAttribute("realm_id", getRealmIdReference(parentResource), REFERENCE);
+        Optional.ofNullable(flow.getDescription()).ifPresent(d -> resource.addAttribute("description", d));
         Optional.ofNullable(flow.getProviderId())
             .ifPresent(v -> resource.addAttribute("provider_id", v));
         if (flowExecution != null) {

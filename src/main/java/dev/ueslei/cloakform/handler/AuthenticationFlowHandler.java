@@ -36,7 +36,7 @@ public class AuthenticationFlowHandler {
 
         List<TerraformImport> imports = importProcessor.generate(realm, Helpers.optional(flowAlias));
         if (imports.isEmpty()){
-            System.out.println("No imports found");
+            System.out.println("No imports created");
             return;
         }
         var outFile = Path.of(output);
@@ -53,7 +53,7 @@ public class AuthenticationFlowHandler {
 
         List<TerraformResource> resources = resourceProcessor.generate(realm, Helpers.optional(flowAlias));
         if (resources.isEmpty()){
-            System.out.println("No resources found");
+            System.out.println("No resources created");
             return;
         }
         var outFile = Path.of(output);

@@ -30,7 +30,7 @@ public class ClientHandler {
 
         List<TerraformImport> imports = importProcessor.generate(realm, Helpers.optional(clientId));
         if (imports.isEmpty()) {
-            System.out.println("No imports found");
+            System.out.println("No imports created");
             return;
         }
         var outFile = Path.of(output);

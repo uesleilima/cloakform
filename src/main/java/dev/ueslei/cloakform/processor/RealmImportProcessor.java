@@ -10,6 +10,7 @@ import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.GroupRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -19,6 +20,9 @@ public class RealmImportProcessor {
     public static final String KEYCLOAK_REALM = "keycloak_realm";
 
     private final Keycloak keycloak;
+
+    @Value("${keycloak.roles.ignored:offline_access,uma_authorization}")
+    private List<String> ignoredRoles = List.of("offline_access", "uma_authorization");
 
     public List<TerraformImport> generate(Optional<String> realmName) {
         return keycloak.realms()
@@ -39,6 +43,7 @@ public class RealmImportProcessor {
             .roles()
             .list()
             .stream()
+            .filter(r -> !ignoredRoles.contains(r.getName()) && !r.getName().equals(realm.getDefaultRole().getName()))
             .map(r -> createRole(realm.getRealm(), r))
             .peek(System.out::println)
             .toList());

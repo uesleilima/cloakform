@@ -29,7 +29,7 @@ public class RealmHandler {
 
         List<TerraformImport> imports = importProcessor.generate(Helpers.optional(realm));
         if (imports.isEmpty()) {
-            System.out.println("No imports found");
+            System.out.println("No imports created");
             return;
         }
         var outFile = Path.of(output);
