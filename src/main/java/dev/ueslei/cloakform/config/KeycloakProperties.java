@@ -27,4 +27,13 @@ public class KeycloakProperties {
     private String authorization;
     private String scope;
 
+    /**
+     * Proxy configuration. Empty by default.
+     */
+    private Proxy proxy = new Proxy(null, -1, null);
+
+    public record Proxy(String host, Integer port, String scheme) {
+
+    }
+
 }
