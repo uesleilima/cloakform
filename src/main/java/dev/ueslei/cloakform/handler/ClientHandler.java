@@ -31,20 +31,19 @@ public class ClientHandler {
         @ShellOption(value = {"-o", "--output"}, defaultValue = "client_imports.tf") String output)
         throws IOException {
 
-        List<TerraformImport> imports = List.of();
         try {
-            imports = importProcessor.generate(realm, Helpers.optional(clientId));
+            List<TerraformImport> imports = importProcessor.generate(realm, Helpers.optional(clientId));
+            if (imports.isEmpty()) {
+                terminal.writer().println("No imports created");
+            } else {
+                imports.forEach(terminal.writer()::println);
+                var outFile = Path.of(output);
+                importWriter.write(imports, outFile);
+                terminal.writer().println("File generated: " + outFile.toAbsolutePath());
+            }
         } catch (RealmNotFoundException e) {
             terminal.writer().printf("Realm %s not found%n", realm);
         }
-        if (imports.isEmpty()) {
-            terminal.writer().println("No imports created");
-            return;
-        }
-        imports.forEach(terminal.writer()::println);
-        var outFile = Path.of(output);
-        importWriter.write(imports, outFile);
-        terminal.writer().println("File generated: " + outFile.toAbsolutePath());
         terminal.writer().flush();
     }
 

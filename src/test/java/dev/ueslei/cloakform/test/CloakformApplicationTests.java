@@ -1,6 +1,6 @@
 package dev.ueslei.cloakform.test;
 
-import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
+import static org.awaitility.Awaitility.await;
 
 import dasniko.testcontainers.keycloak.KeycloakContainer;
 import java.util.concurrent.TimeUnit;
@@ -47,6 +47,59 @@ class CloakformApplicationTests {
 
         await().atMost(2, TimeUnit.SECONDS)
             .untilAsserted(() -> ShellAssertions.assertThat(session.screen()).containsText("keycloak_realm.cloakform"));
+    }
+
+    @Test
+    void clientImportsTest() {
+        NonInteractiveShellSession session = shell
+            .nonInterative("client", "imports", "cloakform", "cloakform", "/tmp/client_imports.tf")
+            .run();
+
+        await().atMost(2, TimeUnit.SECONDS)
+            .untilAsserted(
+                () -> ShellAssertions.assertThat(session.screen()).containsText("keycloak_openid_client.cloakform"));
+    }
+
+    @Test
+    void clientImportsInvalidRealmTest() {
+        NonInteractiveShellSession session = shell
+            .nonInterative("client", "imports", "invalid", "cloakform", "/tmp/client_imports.tf")
+            .run();
+
+        await().atMost(2, TimeUnit.SECONDS)
+            .untilAsserted(() -> ShellAssertions.assertThat(session.screen()).containsText("Realm invalid not found"));
+    }
+
+    @Test
+    void flowImportsTest() {
+        NonInteractiveShellSession session = shell
+            .nonInterative("flow", "imports", "cloakform", "browser", "/tmp/flow_imports.tf")
+            .run();
+
+        await().atMost(2, TimeUnit.SECONDS)
+            .untilAsserted(() -> ShellAssertions.assertThat(session.screen())
+                .containsText("keycloak_authentication_flow.browser"));
+    }
+
+    @Test
+    void flowImportsInvalidRealmTest() {
+        NonInteractiveShellSession session = shell
+            .nonInterative("flow", "imports", "invalid", "browser", "/tmp/flow_imports.tf")
+            .run();
+
+        await().atMost(2, TimeUnit.SECONDS)
+            .untilAsserted(() -> ShellAssertions.assertThat(session.screen()).containsText("Realm invalid not found"));
+    }
+
+    @Test
+    void flowResourcesTest() {
+        NonInteractiveShellSession session = shell
+            .nonInterative("flow", "resources", "cloakform", "browser", "/tmp/flow_resources.tf")
+            .run();
+
+        await().atMost(2, TimeUnit.SECONDS)
+            .untilAsserted(() -> ShellAssertions.assertThat(session.screen())
+                .containsText("keycloak_authentication_flow.browser"));
     }
 
 }

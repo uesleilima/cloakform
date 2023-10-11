@@ -32,12 +32,12 @@ public class RealmHandler {
         List<TerraformImport> imports = importProcessor.generate(Helpers.optional(realm));
         if (imports.isEmpty()) {
             terminal.writer().println("No imports created");
-            return;
+        } else {
+            imports.forEach(terminal.writer()::println);
+            var outFile = Path.of(output);
+            importWriter.write(imports, outFile);
+            terminal.writer().println("File generated: " + outFile.toAbsolutePath());
         }
-        imports.forEach(terminal.writer()::println);
-        var outFile = Path.of(output);
-        importWriter.write(imports, outFile);
-        terminal.writer().println("File generated: " + outFile.toAbsolutePath());
         terminal.writer().flush();
     }
 

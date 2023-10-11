@@ -13,7 +13,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
-import org.jline.terminal.Terminal;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.AbstractAuthenticationExecutionRepresentation;
 import org.keycloak.representations.idm.AuthenticationExecutionInfoRepresentation;
