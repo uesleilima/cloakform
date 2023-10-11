@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.jline.terminal.Terminal;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.ClientMappingsRepresentation;
 import org.keycloak.representations.idm.ClientRepresentation;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Component;
 public class ClientImportProcessor {
 
     private final Keycloak keycloak;
+    private final Terminal terminal;
 
     public List<TerraformImport> generate(String realm, Optional<String> clientId) {
         try {
@@ -32,7 +34,7 @@ public class ClientImportProcessor {
                 .flatMap(client -> generate(realm, client).stream())
                 .toList();
         } catch (NotFoundException ex) {
-            System.out.printf("Realm %s not found%n", realm);
+            terminal.writer().printf("Realm %s not found%n", realm);
             return List.of();
         }
     }
@@ -41,13 +43,13 @@ public class ClientImportProcessor {
         List<TerraformImport> imports = new ArrayList<>();
         var clientImport = createClient(realm, client);
         imports.add(clientImport);
-        System.out.println(clientImport);
+        terminal.writer().println(clientImport);
 
         if (client.getProtocolMappers() != null) {
             imports.addAll(client.getProtocolMappers()
                 .stream()
                 .map(m -> createProtocolMapper(realm, client, m))
-                .peek(System.out::println)
+                .peek(terminal.writer()::println)
                 .toList());
         }
 
@@ -60,7 +62,7 @@ public class ClientImportProcessor {
                 .entrySet()
                 .stream()
                 .map(m -> createRoleMapper(realm, client, m))
-                .peek(System.out::println)
+                .peek(terminal.writer()::println)
                 .toList());
         }
 

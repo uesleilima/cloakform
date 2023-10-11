@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.jline.terminal.Terminal;
 import org.springframework.shell.standard.ShellCommandGroup;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
@@ -27,6 +28,8 @@ public class AuthenticationFlowHandler {
     private final AuthenticationFlowResourceProcessor resourceProcessor;
     private final TerraformResourceWriter resourceWriter;
 
+    private final Terminal terminal;
+
     @ShellMethod(value = "Generates a Terraform configuration file with Authentication Flows imports.", key = "flow imports")
     public void generateImports(
         @ShellOption(value = {"-r", "--realm"}) String realm,
@@ -36,12 +39,13 @@ public class AuthenticationFlowHandler {
 
         List<TerraformImport> imports = importProcessor.generate(realm, Helpers.optional(flowAlias));
         if (imports.isEmpty()){
-            System.out.println("No imports created");
+            terminal.writer().println("No imports created");
             return;
         }
         var outFile = Path.of(output);
         importWriter.write(imports, outFile);
-        System.out.println("File generated: " + outFile.toAbsolutePath());
+        terminal.writer().println("File generated: " + outFile.toAbsolutePath());
+        terminal.writer().flush();
     }
 
     @ShellMethod(value = "Generates a Terraform configuration file with Authentication Flows resources.", key = "flow resources")
@@ -53,12 +57,13 @@ public class AuthenticationFlowHandler {
 
         List<TerraformResource> resources = resourceProcessor.generate(realm, Helpers.optional(flowAlias));
         if (resources.isEmpty()){
-            System.out.println("No resources created");
+            terminal.writer().println("No resources created");
             return;
         }
         var outFile = Path.of(output);
         resourceWriter.write(resources, outFile);
-        System.out.println("File generated: " + outFile.toAbsolutePath());
+        terminal.writer().println("File generated: " + outFile.toAbsolutePath());
+        terminal.writer().flush();
     }
 
 }

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.jline.terminal.Terminal;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.GroupRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
@@ -20,6 +21,7 @@ public class RealmImportProcessor {
     public static final String KEYCLOAK_REALM = "keycloak_realm";
 
     private final Keycloak keycloak;
+    private final Terminal terminal;
 
     @Value("${keycloak.roles.ignored:offline_access,uma_authorization}")
     private List<String> ignoredRoles = List.of("offline_access", "uma_authorization");
@@ -37,7 +39,7 @@ public class RealmImportProcessor {
         List<TerraformImport> imports = new ArrayList<>();
         var realmImport = createRealm(realm);
         imports.add(realmImport);
-        System.out.println(realmImport);
+        terminal.writer().println(realmImport);
 
         imports.addAll(keycloak.realm(realm.getRealm())
             .roles()
@@ -45,12 +47,12 @@ public class RealmImportProcessor {
             .stream()
             .filter(r -> !ignoredRoles.contains(r.getName()) && !r.getName().equals(realm.getDefaultRole().getName()))
             .map(r -> createRole(realm.getRealm(), r))
-            .peek(System.out::println)
+            .peek(terminal.writer()::println)
             .toList());
 
         var defaultRolesImport = createDefaultRoles(realm.getRealm(), realm.getDefaultRole());
         imports.add(defaultRolesImport);
-        System.out.println(defaultRolesImport);
+        terminal.writer().println(defaultRolesImport);
 
         var groups = keycloak.realm(realm.getRealm())
             .groups()
@@ -58,14 +60,14 @@ public class RealmImportProcessor {
         if (groups != null) {
             imports.addAll(groups.stream()
                 .map(g -> createGroup(realm.getRealm(), g))
-                .peek(System.out::println)
+                .peek(terminal.writer()::println)
                 .toList());
         }
 
         if (!keycloak.realm(realm.getRealm()).getDefaultGroups().isEmpty()) {
             var defaultGroupsImport = createDefaultGroups(realm.getRealm());
             imports.add(defaultGroupsImport);
-            System.out.println(defaultGroupsImport);
+            terminal.writer().println(defaultGroupsImport);
         }
 
         return imports;

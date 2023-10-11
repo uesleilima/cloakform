@@ -17,6 +17,6 @@ public class TerraformResource extends TerraformObject {
 
     @Override
     public String toString() {
-        return this.name;
+        return String.format("%s.%s", this.resource, this.name);
     }
 }

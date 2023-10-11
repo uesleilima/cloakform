@@ -4,6 +4,7 @@ import dev.ueslei.cloakform.model.TerraformImport;
 import dev.ueslei.cloakform.model.TerraformObject;
 import dev.ueslei.cloakform.model.TerraformResource;
 import lombok.extern.slf4j.Slf4j;
+import org.jline.terminal.Terminal;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.AuthenticationExecutionInfoRepresentation;
 import org.keycloak.representations.idm.AuthenticationFlowRepresentation;
@@ -16,8 +17,9 @@ public class AuthenticationFlowImportProcessor extends AuthenticationFlowObjectP
 
     private final AuthenticationFlowResourceProcessor processor;
 
-    public AuthenticationFlowImportProcessor(Keycloak keycloak, AuthenticationFlowResourceProcessor processor) {
-        super(keycloak);
+    public AuthenticationFlowImportProcessor(Keycloak keycloak, Terminal terminal,
+        AuthenticationFlowResourceProcessor processor) {
+        super(keycloak, terminal);
         this.processor = processor;
     }
 

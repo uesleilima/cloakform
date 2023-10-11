@@ -13,6 +13,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
+import org.jline.terminal.Terminal;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.AbstractAuthenticationExecutionRepresentation;
 import org.keycloak.representations.idm.AuthenticationExecutionInfoRepresentation;
@@ -30,8 +31,8 @@ public class AuthenticationFlowResourceProcessor extends AuthenticationFlowObjec
     public static final String KEYCLOAK_AUTHENTICATION_EXECUTION = "keycloak_authentication_execution";
     public static final String KEYCLOAK_AUTHENTICATION_EXECUTION_CONFIG = "keycloak_authentication_execution_config";
 
-    public AuthenticationFlowResourceProcessor(Keycloak keycloak) {
-        super(keycloak);
+    public AuthenticationFlowResourceProcessor(Keycloak keycloak, Terminal terminal) {
+        super(keycloak, terminal);
     }
 
     @Override

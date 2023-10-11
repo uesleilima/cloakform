@@ -13,7 +13,6 @@ public class KeycloakConfiguration {
 
     @Bean
     public Keycloak keycloak(KeycloakProperties properties) {
-        System.out.printf("You are connecting to Keycloak at %s%n", properties.getServerUrl());
         var proxy = properties.getProxy();
         return KeycloakBuilder.builder()
             .serverUrl(properties.getServerUrl())

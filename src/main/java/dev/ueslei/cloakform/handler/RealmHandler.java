@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.jline.terminal.Terminal;
 import org.springframework.shell.standard.ShellCommandGroup;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
@@ -20,6 +21,7 @@ public class RealmHandler {
 
     private final RealmImportProcessor importProcessor;
     private final TerraformImportWriter importWriter;
+    private final Terminal terminal;
 
     @ShellMethod(value = "Generates a Terraform configuration file with Realm imports.", key = "realm imports")
     public void generateImports(
@@ -29,12 +31,13 @@ public class RealmHandler {
 
         List<TerraformImport> imports = importProcessor.generate(Helpers.optional(realm));
         if (imports.isEmpty()) {
-            System.out.println("No imports created");
+            terminal.writer().println("No imports created");
             return;
         }
         var outFile = Path.of(output);
         importWriter.write(imports, outFile);
-        System.out.println("File generated: " + outFile.toAbsolutePath());
+        terminal.writer().println("File generated: " + outFile.toAbsolutePath());
+        terminal.writer().flush();
     }
 
 }
