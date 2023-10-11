@@ -12,7 +12,7 @@
   "ssoSessionIdleTimeoutRememberMe": 0,
   "ssoSessionMaxLifespanRememberMe": 0,
   "offlineSessionIdleTimeout": 2592000,
-  "offlineSessionMaxLifespanEnabled": false,
+  "offlineSessionMaxLifespanEnabled": true,
   "offlineSessionMaxLifespan": 5184000,
   "clientSessionIdleTimeout": 0,
   "clientSessionMaxLifespan": 0,
@@ -27,14 +27,14 @@
   "oauth2DevicePollingInterval": 5,
   "enabled": true,
   "sslRequired": "external",
-  "registrationAllowed": false,
-  "registrationEmailAsUsername": false,
-  "rememberMe": false,
-  "verifyEmail": false,
+  "registrationAllowed": true,
+  "registrationEmailAsUsername": true,
+  "rememberMe": true,
+  "verifyEmail": true,
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
-  "resetPasswordAllowed": false,
-  "editUsernameAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": true,
   "bruteForceProtected": false,
   "permanentLockout": false,
   "maxFailureWaitSeconds": 900,
@@ -61,7 +61,11 @@
         "composite": false,
         "clientRole": false,
         "containerId": "739034a8-9db3-444a-84fd-560c671adbca",
-        "attributes": {}
+        "attributes": {
+          "cloakform": [
+            "cloakform"
+          ]
+        }
       },
       {
         "id": "9bb30863-0b44-40c7-9028-14a33c498f11",
@@ -309,7 +313,29 @@
         }
       ],
       "security-admin-console": [],
-      "cloakform": [],
+      "cloakform": [
+        {
+          "id": "80556aa2-b9de-4440-b328-7ff5dafae912",
+          "name": "cloakform",
+          "description": "",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "b23e9f75-4a1c-4447-b3d7-e63c4bdc867b",
+          "attributes": {
+            "cloakform": [
+              "cloakform"
+            ]
+          }
+        },
+        {
+          "id": "7e70bde2-8bca-4c9f-b034-a2ce4d93675b",
+          "name": "uma_protection",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "b23e9f75-4a1c-4447-b3d7-e63c4bdc867b",
+          "attributes": {}
+        }
+      ],
       "admin-cli": [],
       "account-console": [],
       "broker": [
@@ -438,6 +464,7 @@
   "requiredCredentials": [
     "password"
   ],
+  "passwordPolicy": "length(5)",
   "otpPolicyType": "totp",
   "otpPolicyAlgorithm": "HmacSHA1",
   "otpPolicyInitialCounter": 0,
@@ -474,6 +501,31 @@
   "webAuthnPolicyPasswordlessCreateTimeout": 0,
   "webAuthnPolicyPasswordlessAvoidSameAuthenticatorRegister": false,
   "webAuthnPolicyPasswordlessAcceptableAaguids": [],
+  "users": [
+    {
+      "id": "a48fc49b-0bd8-432b-a468-2bb8a7aee5b3",
+      "createdTimestamp": 1697027912102,
+      "username": "service-account-cloakform",
+      "enabled": true,
+      "totp": false,
+      "emailVerified": false,
+      "serviceAccountClientId": "cloakform",
+      "disableableCredentialTypes": [],
+      "requiredActions": [],
+      "realmRoles": [
+        "default-roles-cloakform"
+      ],
+      "clientRoles": {
+        "cloakform": [
+          "uma_protection"
+        ]
+      },
+      "notBefore": 0,
+      "groups": [
+        "/cloakform"
+      ]
+    }
+  ],
   "scopeMappings": [
     {
       "clientScope": "offline_access",
@@ -685,6 +737,7 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
+      "secret": "secret",
       "redirectUris": [
         "",
         "*"
@@ -699,18 +752,31 @@
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": true,
-      "serviceAccountsEnabled": false,
-      "publicClient": true,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": true,
+      "publicClient": false,
       "frontchannelLogout": true,
       "protocol": "openid-connect",
       "attributes": {
-        "oidc.ciba.grant.enabled": "false",
+        "client.secret.creation.time": "1697027912",
+        "login_theme": "keycloak",
         "post.logout.redirect.uris": "+",
         "oauth2.device.authorization.grant.enabled": "false",
+        "backchannel.logout.revoke.offline.tokens": "false",
+        "use.refresh.tokens": "true",
+        "oidc.ciba.grant.enabled": "false",
         "backchannel.logout.session.required": "true",
-        "backchannel.logout.revoke.offline.tokens": "false"
+        "client_credentials.use_refresh_token": "false",
+        "tls.client.certificate.bound.access.tokens": "false",
+        "require.pushed.authorization.requests": "false",
+        "acr.loa.map": "{}",
+        "display.on.consent.screen": "false",
+        "token.response.type.bearer.lower-case": "false"
       },
-      "authenticationFlowBindingOverrides": {},
+      "authenticationFlowBindingOverrides": {
+        "direct_grant": "d4def9e0-34b4-4d70-9f39-982ce3d9866d",
+        "browser": "55991781-c24a-4ef4-971f-ad0ffffc3c1a"
+      },
       "fullScopeAllowed": true,
       "nodeReRegistrationTimeout": -1,
       "protocolMappers": [
@@ -742,7 +808,48 @@
         "phone",
         "offline_access",
         "microprofile-jwt"
-      ]
+      ],
+      "authorizationSettings": {
+        "allowRemoteResourceManagement": true,
+        "policyEnforcementMode": "ENFORCING",
+        "resources": [
+          {
+            "name": "Default Resource",
+            "type": "urn:cloakform:resources:default",
+            "ownerManagedAccess": false,
+            "attributes": {},
+            "_id": "eb873264-18fa-43f5-add4-99ee206f54ea",
+            "uris": [
+              "/*"
+            ]
+          }
+        ],
+        "policies": [
+          {
+            "id": "5e9fdca7-df17-4db7-be20-915792de56e3",
+            "name": "Default Policy",
+            "description": "A policy that grants access only for users within this realm",
+            "type": "resource",
+            "logic": "POSITIVE",
+            "decisionStrategy": "AFFIRMATIVE",
+            "config": {}
+          },
+          {
+            "id": "a262a232-c619-41b4-8acf-058b49f973fc",
+            "name": "Default Permission",
+            "description": "A permission that applies to the default resource type",
+            "type": "resource",
+            "logic": "POSITIVE",
+            "decisionStrategy": "UNANIMOUS",
+            "config": {
+              "defaultResourceType": "urn:cloakform:resources:default",
+              "applyPolicies": "[\"Default Policy\"]"
+            }
+          }
+        ],
+        "scopes": [],
+        "decisionStrategy": "UNANIMOUS"
+      }
     },
     {
       "id": "a3f00f23-5b1b-44b2-9482-06685957a9d2",
@@ -1384,6 +1491,10 @@
     "strictTransportSecurity": "max-age=31536000; includeSubDomains"
   },
   "smtpServer": {},
+  "loginTheme": "keycloak",
+  "accountTheme": "keycloak.v2",
+  "adminTheme": "keycloak.v2",
+  "emailTheme": "keycloak",
   "eventsEnabled": false,
   "eventsListeners": [
     "jboss-logging"
@@ -1554,8 +1665,11 @@
       }
     ]
   },
-  "internationalizationEnabled": false,
-  "supportedLocales": [],
+  "internationalizationEnabled": true,
+  "supportedLocales": [
+    "en"
+  ],
+  "defaultLocale": "en",
   "authenticationFlows": [
     {
       "id": "8444aea3-0055-45d1-9069-f7354a760a5b",
@@ -2115,7 +2229,7 @@
       "alias": "TERMS_AND_CONDITIONS",
       "name": "Terms and Conditions",
       "providerId": "TERMS_AND_CONDITIONS",
-      "enabled": false,
+      "enabled": true,
       "defaultAction": false,
       "priority": 20,
       "config": {}
@@ -2151,7 +2265,7 @@
       "alias": "delete_account",
       "name": "Delete Account",
       "providerId": "delete_account",
-      "enabled": false,
+      "enabled": true,
       "defaultAction": false,
       "priority": 60,
       "config": {}
@@ -2182,6 +2296,15 @@
       "defaultAction": false,
       "priority": 1000,
       "config": {}
+    },
+    {
+      "alias": "VERIFY_PROFILE",
+      "name": "Verify Profile",
+      "providerId": "VERIFY_PROFILE",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 1001,
+      "config": {}
     }
   ],
   "browserFlow": "browser",
@@ -2210,6 +2333,14 @@
     "profiles": []
   },
   "clientPolicies": {
-    "policies": []
+    "policies": [
+      {
+        "name": "policy",
+        "description": "",
+        "enabled": true,
+        "conditions": [],
+        "profiles": []
+      }
+    ]
   }
 }

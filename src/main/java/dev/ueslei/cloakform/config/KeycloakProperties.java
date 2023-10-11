@@ -14,7 +14,7 @@ import org.springframework.validation.annotation.Validated;
 public class KeycloakProperties {
 
     @NotEmpty
-    private String serverUrl = "http://localhost:8181/auth";
+    private String serverUrl = "http://localhost:8080";
     @NotEmpty
     private String realm = "master";
     @NotEmpty
