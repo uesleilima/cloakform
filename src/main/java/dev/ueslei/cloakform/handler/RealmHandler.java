@@ -34,6 +34,7 @@ public class RealmHandler {
             terminal.writer().println("No imports created");
             return;
         }
+        imports.forEach(terminal.writer()::println);
         var outFile = Path.of(output);
         importWriter.write(imports, outFile);
         terminal.writer().println("File generated: " + outFile.toAbsolutePath());

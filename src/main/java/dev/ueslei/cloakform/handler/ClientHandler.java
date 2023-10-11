@@ -3,6 +3,7 @@ package dev.ueslei.cloakform.handler;
 import dev.ueslei.cloakform.model.TerraformImport;
 import dev.ueslei.cloakform.processor.ClientImportProcessor;
 import dev.ueslei.cloakform.util.Helpers;
+import dev.ueslei.cloakform.util.RealmNotFoundException;
 import dev.ueslei.cloakform.writer.TerraformImportWriter;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -30,11 +31,17 @@ public class ClientHandler {
         @ShellOption(value = {"-o", "--output"}, defaultValue = "client_imports.tf") String output)
         throws IOException {
 
-        List<TerraformImport> imports = importProcessor.generate(realm, Helpers.optional(clientId));
+        List<TerraformImport> imports = List.of();
+        try {
+            imports = importProcessor.generate(realm, Helpers.optional(clientId));
+        } catch (RealmNotFoundException e) {
+            terminal.writer().printf("Realm %s not found%n", realm);
+        }
         if (imports.isEmpty()) {
             terminal.writer().println("No imports created");
             return;
         }
+        imports.forEach(terminal.writer()::println);
         var outFile = Path.of(output);
         importWriter.write(imports, outFile);
         terminal.writer().println("File generated: " + outFile.toAbsolutePath());

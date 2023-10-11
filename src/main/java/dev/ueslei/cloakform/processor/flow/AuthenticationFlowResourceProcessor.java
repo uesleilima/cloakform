@@ -31,8 +31,8 @@ public class AuthenticationFlowResourceProcessor extends AuthenticationFlowObjec
     public static final String KEYCLOAK_AUTHENTICATION_EXECUTION = "keycloak_authentication_execution";
     public static final String KEYCLOAK_AUTHENTICATION_EXECUTION_CONFIG = "keycloak_authentication_execution_config";
 
-    public AuthenticationFlowResourceProcessor(Keycloak keycloak, Terminal terminal) {
-        super(keycloak, terminal);
+    public AuthenticationFlowResourceProcessor(Keycloak keycloak) {
+        super(keycloak);
     }
 
     @Override

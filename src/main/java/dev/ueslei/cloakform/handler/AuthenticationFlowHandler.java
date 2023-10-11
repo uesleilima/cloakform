@@ -5,6 +5,7 @@ import dev.ueslei.cloakform.model.TerraformResource;
 import dev.ueslei.cloakform.processor.flow.AuthenticationFlowImportProcessor;
 import dev.ueslei.cloakform.processor.flow.AuthenticationFlowResourceProcessor;
 import dev.ueslei.cloakform.util.Helpers;
+import dev.ueslei.cloakform.util.RealmNotFoundException;
 import dev.ueslei.cloakform.writer.TerraformImportWriter;
 import dev.ueslei.cloakform.writer.TerraformResourceWriter;
 import java.io.IOException;
@@ -37,11 +38,17 @@ public class AuthenticationFlowHandler {
         @ShellOption(value = {"-o", "--output"}, defaultValue = "flow_imports.tf") String output)
         throws IOException {
 
-        List<TerraformImport> imports = importProcessor.generate(realm, Helpers.optional(flowAlias));
+        List<TerraformImport> imports = List.of();
+        try {
+            imports = importProcessor.generate(realm, Helpers.optional(flowAlias));
+        } catch (RealmNotFoundException e) {
+            terminal.writer().printf("Realm %s not found%n", realm);
+        }
         if (imports.isEmpty()){
             terminal.writer().println("No imports created");
             return;
         }
+        imports.forEach(terminal.writer()::println);
         var outFile = Path.of(output);
         importWriter.write(imports, outFile);
         terminal.writer().println("File generated: " + outFile.toAbsolutePath());
@@ -55,11 +62,17 @@ public class AuthenticationFlowHandler {
         @ShellOption(value = {"-o", "--output"}, defaultValue = "flow_resources.tf") String output)
         throws IOException {
 
-        List<TerraformResource> resources = resourceProcessor.generate(realm, Helpers.optional(flowAlias));
+        List<TerraformResource> resources = null;
+        try {
+            resources = resourceProcessor.generate(realm, Helpers.optional(flowAlias));
+        } catch (RealmNotFoundException e) {
+            terminal.writer().printf("Realm %s not found%n", realm);
+        }
         if (resources.isEmpty()){
             terminal.writer().println("No resources created");
             return;
         }
+        resources.forEach(terminal.writer()::println);
         var outFile = Path.of(output);
         resourceWriter.write(resources, outFile);
         terminal.writer().println("File generated: " + outFile.toAbsolutePath());

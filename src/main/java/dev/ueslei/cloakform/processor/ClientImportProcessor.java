@@ -2,6 +2,7 @@ package dev.ueslei.cloakform.processor;
 
 import dev.ueslei.cloakform.model.TerraformImport;
 import dev.ueslei.cloakform.util.Helpers;
+import dev.ueslei.cloakform.util.RealmNotFoundException;
 import jakarta.ws.rs.NotFoundException;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,9 +21,8 @@ import org.springframework.stereotype.Component;
 public class ClientImportProcessor {
 
     private final Keycloak keycloak;
-    private final Terminal terminal;
 
-    public List<TerraformImport> generate(String realm, Optional<String> clientId) {
+    public List<TerraformImport> generate(String realm, Optional<String> clientId) throws RealmNotFoundException {
         try {
             return clientId.map(cId -> keycloak.realm(realm)
                     .clients()
@@ -34,8 +34,7 @@ public class ClientImportProcessor {
                 .flatMap(client -> generate(realm, client).stream())
                 .toList();
         } catch (NotFoundException ex) {
-            terminal.writer().printf("Realm %s not found%n", realm);
-            return List.of();
+            throw new RealmNotFoundException(ex);
         }
     }
 
@@ -43,13 +42,11 @@ public class ClientImportProcessor {
         List<TerraformImport> imports = new ArrayList<>();
         var clientImport = createClient(realm, client);
         imports.add(clientImport);
-        terminal.writer().println(clientImport);
 
         if (client.getProtocolMappers() != null) {
             imports.addAll(client.getProtocolMappers()
                 .stream()
                 .map(m -> createProtocolMapper(realm, client, m))
-                .peek(terminal.writer()::println)
                 .toList());
         }
 
@@ -62,7 +59,6 @@ public class ClientImportProcessor {
                 .entrySet()
                 .stream()
                 .map(m -> createRoleMapper(realm, client, m))
-                .peek(terminal.writer()::println)
                 .toList());
         }
 

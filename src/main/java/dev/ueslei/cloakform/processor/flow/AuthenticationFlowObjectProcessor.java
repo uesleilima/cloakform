@@ -2,6 +2,7 @@ package dev.ueslei.cloakform.processor.flow;
 
 import dev.ueslei.cloakform.model.TerraformObject;
 import dev.ueslei.cloakform.util.Helpers;
+import dev.ueslei.cloakform.util.RealmNotFoundException;
 import jakarta.ws.rs.NotFoundException;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,17 +25,15 @@ import org.springframework.stereotype.Component;
 public abstract class AuthenticationFlowObjectProcessor<T extends TerraformObject> {
 
     private final Keycloak keycloak;
-    private final Terminal terminal;
 
-    public List<T> generate(String realmName, Optional<String> flowAlias) {
+    public List<T> generate(String realmName, Optional<String> flowAlias) throws RealmNotFoundException {
         try {
             return keycloak.realms().realm(realmName).flows().getFlows().stream()
                 .filter(f -> flowAlias.isEmpty() || f.getAlias().equals(flowAlias.get()))
                 .flatMap(flow -> generate(realmName, flow, null, null, null, 0).stream())
                 .toList();
         } catch (NotFoundException ex) {
-            terminal.writer().printf("Realm %s not found%n", realmName);
-            return List.of();
+            throw new RealmNotFoundException(ex);
         }
     }
 
@@ -53,7 +52,6 @@ public abstract class AuthenticationFlowObjectProcessor<T extends TerraformObjec
 
         T flowObject = createFlow(realmName, parentFlow, flow, flowExecution, parentObject);
         objects.add(flowObject);
-        terminal.writer().printf("%s%s%n", "\t".repeat(level), flowObject);
 
         AuthenticationManagementResource flows = keycloak.realms().realm(realmName).flows();
         flows.getExecutions(flow.getAlias()).forEach(execution -> {
@@ -65,7 +63,6 @@ public abstract class AuthenticationFlowObjectProcessor<T extends TerraformObjec
                 } else {
                     T executionObject = createExecution(realmName, flow, execution, flowObject);
                     objects.add(executionObject);
-                    terminal.writer().printf("%s * %s%n", "\t".repeat(level), executionObject);
 
                     Optional<AuthenticatorConfigRepresentation> config = execution.getAuthenticationConfig() != null
                         ? Optional.of(flows.getAuthenticatorConfig(execution.getAuthenticationConfig()))
@@ -74,7 +71,6 @@ public abstract class AuthenticationFlowObjectProcessor<T extends TerraformObjec
                         T executionConfigObject = createExecutionConfig(realmName, getFlowPrefix(flow.getAlias()),
                             execution, c, executionObject);
                         objects.add(executionConfigObject);
-                        terminal.writer().printf("%s \\_ %s%n", "\t".repeat(level), executionConfigObject);
                     });
                 }
             }
