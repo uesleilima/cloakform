@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.GroupRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
+import org.keycloak.representations.idm.RequiredActionProviderRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -63,7 +64,16 @@ public class RealmImportProcessor {
             imports.add(defaultGroupsImport);
         }
 
+        imports.addAll(keycloak.realm(realm.getRealm()).flows().getRequiredActions().stream()
+            .map(ra -> createRequiredAction(realm.getRealm(), ra))
+            .toList());
+
         return imports;
+    }
+
+    private TerraformImport createRequiredAction(String realm, RequiredActionProviderRepresentation requiredAction) {
+        return new TerraformImport(String.format("%s/%s", realm, requiredAction.getAlias()), "keycloak_required_action",
+            String.format("%s_req_action", Helpers.sanitizeName(requiredAction.getAlias())));
     }
 
     private TerraformImport createDefaultGroups(String realm) {
