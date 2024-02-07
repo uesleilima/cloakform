@@ -2,8 +2,8 @@ package dev.ueslei.cloakform.handler;
 
 import dev.ueslei.cloakform.model.TerraformImport;
 import dev.ueslei.cloakform.model.TerraformResource;
-import dev.ueslei.cloakform.processor.flow.AuthenticationFlowImportProcessor;
-import dev.ueslei.cloakform.processor.flow.AuthenticationFlowResourceProcessor;
+import dev.ueslei.cloakform.processor.flow.AuthenticationFlowImportApiProcessor;
+import dev.ueslei.cloakform.processor.flow.AuthenticationFlowResourceApiProcessor;
 import dev.ueslei.cloakform.util.Helpers;
 import dev.ueslei.cloakform.util.RealmNotFoundException;
 import dev.ueslei.cloakform.writer.TerraformImportWriter;
@@ -23,10 +23,10 @@ import org.springframework.shell.standard.ShellOption;
 @ShellCommandGroup("CloakForm :: Authentication Flows")
 public class AuthenticationFlowHandler {
 
-    private final AuthenticationFlowImportProcessor importProcessor;
+    private final AuthenticationFlowImportApiProcessor importProcessor;
     private final TerraformImportWriter importWriter;
 
-    private final AuthenticationFlowResourceProcessor resourceProcessor;
+    private final AuthenticationFlowResourceApiProcessor resourceProcessor;
     private final TerraformResourceWriter resourceWriter;
 
     private final Terminal terminal;
