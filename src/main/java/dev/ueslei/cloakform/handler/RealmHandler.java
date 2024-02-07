@@ -1,7 +1,7 @@
 package dev.ueslei.cloakform.handler;
 
 import dev.ueslei.cloakform.model.TerraformImport;
-import dev.ueslei.cloakform.processor.RealmImportProcessor;
+import dev.ueslei.cloakform.processor.realm.RealmImportApiProcessor;
 import dev.ueslei.cloakform.util.Helpers;
 import dev.ueslei.cloakform.writer.TerraformImportWriter;
 import java.io.IOException;
@@ -19,7 +19,7 @@ import org.springframework.shell.standard.ShellOption;
 @ShellCommandGroup("CloakForm :: Realms")
 public class RealmHandler {
 
-    private final RealmImportProcessor importProcessor;
+    private final RealmImportApiProcessor importProcessor;
     private final TerraformImportWriter importWriter;
     private final Terminal terminal;
 

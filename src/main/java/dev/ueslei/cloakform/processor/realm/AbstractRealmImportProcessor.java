@@ -1,47 +1,28 @@
-package dev.ueslei.cloakform.processor;
+package dev.ueslei.cloakform.processor.realm;
 
 import dev.ueslei.cloakform.model.TerraformImport;
 import dev.ueslei.cloakform.util.Helpers;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import lombok.RequiredArgsConstructor;
-import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.GroupRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.representations.idm.RequiredActionProviderRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
-@Component
-@RequiredArgsConstructor
-public class RealmImportProcessor {
+public abstract class AbstractRealmImportProcessor {
 
     public static final String KEYCLOAK_REALM = "keycloak_realm";
 
-    private final Keycloak keycloak;
-
     @Value("${keycloak.roles.ignored:offline_access,uma_authorization}")
     private List<String> ignoredRoles = List.of("offline_access", "uma_authorization");
-
-    public List<TerraformImport> generate(Optional<String> realmName) {
-        return keycloak.realms()
-            .findAll()
-            .stream()
-            .filter(r -> realmName.isEmpty() || r.getRealm().equals(realmName.get()))
-            .flatMap(r -> generate(r).stream())
-            .toList();
-    }
 
     public List<TerraformImport> generate(RealmRepresentation realm) {
         List<TerraformImport> imports = new ArrayList<>();
         var realmImport = createRealm(realm);
         imports.add(realmImport);
 
-        imports.addAll(keycloak.realm(realm.getRealm())
-            .roles()
-            .list()
+        imports.addAll(getRoleRepresentations(realm)
             .stream()
             .filter(r -> !ignoredRoles.contains(r.getName()) && !r.getName().equals(realm.getDefaultRole().getName()))
             .map(r -> createRole(realm.getRealm(), r))
@@ -50,26 +31,32 @@ public class RealmImportProcessor {
         var defaultRolesImport = createDefaultRoles(realm.getRealm(), realm.getDefaultRole());
         imports.add(defaultRolesImport);
 
-        var groups = keycloak.realm(realm.getRealm())
-            .groups()
-            .groups();
+        var groups = getGroups(realm);
         if (groups != null) {
             imports.addAll(groups.stream()
                 .map(g -> createGroup(realm.getRealm(), g))
                 .toList());
         }
 
-        if (!keycloak.realm(realm.getRealm()).getDefaultGroups().isEmpty()) {
+        if (hasDefaultGroups(realm)) {
             var defaultGroupsImport = createDefaultGroups(realm.getRealm());
             imports.add(defaultGroupsImport);
         }
 
-        imports.addAll(keycloak.realm(realm.getRealm()).flows().getRequiredActions().stream()
+        imports.addAll(getRequiredActions(realm).stream()
             .map(ra -> createRequiredAction(realm.getRealm(), ra))
             .toList());
 
         return imports;
     }
+
+    protected abstract List<RequiredActionProviderRepresentation> getRequiredActions(RealmRepresentation realm);
+
+    protected abstract List<RoleRepresentation> getRoleRepresentations(RealmRepresentation realm);
+
+    protected abstract boolean hasDefaultGroups(RealmRepresentation realm);
+
+    protected abstract List<GroupRepresentation> getGroups(RealmRepresentation realm);
 
     private TerraformImport createRequiredAction(String realm, RequiredActionProviderRepresentation requiredAction) {
         return new TerraformImport(String.format("%s/%s", realm, requiredAction.getAlias()), "keycloak_required_action",

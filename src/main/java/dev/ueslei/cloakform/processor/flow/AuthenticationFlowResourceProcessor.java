@@ -3,7 +3,7 @@ package dev.ueslei.cloakform.processor.flow;
 import static dev.ueslei.cloakform.model.AttributeType.LIST;
 import static dev.ueslei.cloakform.model.AttributeType.MAP;
 import static dev.ueslei.cloakform.model.AttributeType.REFERENCE;
-import static dev.ueslei.cloakform.processor.RealmImportProcessor.KEYCLOAK_REALM;
+import static dev.ueslei.cloakform.processor.realm.RealmImportApiProcessor.KEYCLOAK_REALM;
 
 import dev.ueslei.cloakform.model.Attribute;
 import dev.ueslei.cloakform.model.TerraformObject;
