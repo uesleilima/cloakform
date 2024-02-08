@@ -48,7 +48,7 @@ public class AuthenticationFlowResourceApiProcessor extends AbstractAuthenticati
         return getAuthenticationManagement(realm).getExecutions(flow.getAlias());
     }
 
-    protected List<AuthenticationFlowRepresentation> getFlows(RealmRepresentation realm) {
+    protected List<AuthenticationFlowRepresentation> getTopLevelFlows(RealmRepresentation realm) {
         return getAuthenticationManagement(realm).getFlows();
     }
 

@@ -31,13 +31,18 @@ public class AuthenticationFlowResourceFileProcessor extends AbstractAuthenticat
         return generate(realm, flowAlias);
     }
 
-    protected List<AuthenticationFlowRepresentation> getFlows(RealmRepresentation realm) {
-        return realm.getAuthenticationFlows();
+    protected List<AuthenticationFlowRepresentation> getTopLevelFlows(RealmRepresentation realm) {
+        return realm.getAuthenticationFlows()
+            .stream()
+            .filter(AuthenticationFlowRepresentation::isTopLevel)
+            .toList();
     }
 
     protected AuthenticationFlowRepresentation getFlow(RealmRepresentation realm,
         AuthenticationExecutionInfoRepresentation execution) {
-        return getFlows(realm).stream().filter(f -> StringUtils.hasText(execution.getFlowId())
+        return realm.getAuthenticationFlows()
+            .stream()
+            .filter(f -> StringUtils.hasText(execution.getFlowId())
                 ? f.getId().equals(execution.getFlowId())
                 : f.getAlias().equals(execution.getDisplayName()))
             .findFirst()
@@ -46,7 +51,7 @@ public class AuthenticationFlowResourceFileProcessor extends AbstractAuthenticat
 
     protected List<AuthenticationExecutionInfoRepresentation> getExecutions(RealmRepresentation realm,
         AuthenticationFlowRepresentation flow) {
-        return getFlows(realm)
+        return realm.getAuthenticationFlows()
             .stream()
             .filter(f -> f.getId().equals(flow.getId()))
             .findFirst()

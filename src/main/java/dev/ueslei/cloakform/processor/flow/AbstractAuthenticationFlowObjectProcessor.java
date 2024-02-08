@@ -18,7 +18,7 @@ import org.keycloak.representations.idm.RealmRepresentation;
 public abstract class AbstractAuthenticationFlowObjectProcessor<T extends TerraformObject> {
 
     public List<T> generate(RealmRepresentation realm, Optional<String> flowAlias) throws RealmNotFoundException {
-        return getFlows(realm)
+        return getTopLevelFlows(realm)
             .stream()
             .filter(f -> flowAlias.isEmpty() || f.getAlias().equals(flowAlias.get()))
             .flatMap(flow -> generate(realm, flow, null, null, null, 0).stream())
@@ -75,7 +75,7 @@ public abstract class AbstractAuthenticationFlowObjectProcessor<T extends Terraf
     protected abstract List<AuthenticationExecutionInfoRepresentation> getExecutions(
         RealmRepresentation realm, AuthenticationFlowRepresentation flow);
 
-    protected abstract List<AuthenticationFlowRepresentation> getFlows(RealmRepresentation realm);
+    protected abstract List<AuthenticationFlowRepresentation> getTopLevelFlows(RealmRepresentation realm);
 
     protected abstract T createExecutionConfig(String realm, String flowPrefix,
         AuthenticationExecutionInfoRepresentation execution, AuthenticatorConfigRepresentation executionConfig,

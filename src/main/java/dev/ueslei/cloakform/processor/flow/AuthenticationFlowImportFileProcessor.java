@@ -47,7 +47,7 @@ public class AuthenticationFlowImportFileProcessor extends AbstractAuthenticatio
     }
 
     @Override
-    protected List<AuthenticationFlowRepresentation> getFlows(RealmRepresentation realm) {
-        return delegate.getFlows(realm);
+    protected List<AuthenticationFlowRepresentation> getTopLevelFlows(RealmRepresentation realm) {
+        return delegate.getTopLevelFlows(realm);
     }
 }

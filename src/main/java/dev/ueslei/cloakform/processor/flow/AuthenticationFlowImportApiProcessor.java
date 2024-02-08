@@ -50,7 +50,7 @@ public class AuthenticationFlowImportApiProcessor extends AbstractAuthentication
     }
 
     @Override
-    protected List<AuthenticationFlowRepresentation> getFlows(RealmRepresentation realm) {
-        return delegate.getFlows(realm);
+    protected List<AuthenticationFlowRepresentation> getTopLevelFlows(RealmRepresentation realm) {
+        return delegate.getTopLevelFlows(realm);
     }
 }
