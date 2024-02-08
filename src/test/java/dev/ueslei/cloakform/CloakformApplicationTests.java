@@ -1,4 +1,4 @@
-package dev.ueslei.cloakform.test;
+package dev.ueslei.cloakform;
 
 import static org.awaitility.Awaitility.await;
 

@@ -1,74 +1,59 @@
-package dev.ueslei.cloakform.processor;
+package dev.ueslei.cloakform.processor.client;
 
 import dev.ueslei.cloakform.model.TerraformImport;
 import dev.ueslei.cloakform.util.Helpers;
-import dev.ueslei.cloakform.util.RealmNotFoundException;
-import jakarta.ws.rs.NotFoundException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import lombok.RequiredArgsConstructor;
-import org.keycloak.admin.client.Keycloak;
-import org.keycloak.representations.idm.ClientMappingsRepresentation;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.ProtocolMapperRepresentation;
-import org.springframework.stereotype.Component;
+import org.keycloak.representations.idm.RealmRepresentation;
 
-@Component
-@RequiredArgsConstructor
-public class ClientImportProcessor {
+public abstract class AbstractClientImportProcessor {
 
-    private final Keycloak keycloak;
-
-    public List<TerraformImport> generate(String realm, Optional<String> clientId) throws RealmNotFoundException {
-        try {
-            return clientId.map(cId -> keycloak.realm(realm)
-                    .clients()
-                    .findByClientId(cId))
-                .orElse(keycloak.realm(realm)
-                    .clients()
-                    .findAll())
-                .stream()
-                .flatMap(client -> generate(realm, client).stream())
-                .toList();
-        } catch (NotFoundException ex) {
-            throw new RealmNotFoundException(ex);
-        }
+    protected List<TerraformImport> generate(RealmRepresentation realm, Optional<String> clientId) {
+        return clientId.map(cId -> getClientsById(realm, cId))
+            .orElse(getClients(realm))
+            .stream()
+            .flatMap(client -> generate(realm, client).stream())
+            .toList();
     }
 
-    public List<TerraformImport> generate(String realm, ClientRepresentation client) {
+    public List<TerraformImport> generate(RealmRepresentation realm, ClientRepresentation client) {
         List<TerraformImport> imports = new ArrayList<>();
-        var clientImport = createClient(realm, client);
+        var clientImport = createClient(realm.getRealm(), client);
         imports.add(clientImport);
 
         if (client.getProtocolMappers() != null) {
             imports.addAll(client.getProtocolMappers()
                 .stream()
-                .map(m -> createProtocolMapper(realm, client, m))
+                .map(m -> createProtocolMapper(realm.getRealm(), client, m))
                 .toList());
         }
 
-        var clientMappings = keycloak.realm(realm).clients().get(client.getId())
-            .getScopeMappings()
-            .getAll()
-            .getClientMappings();
-        if (clientMappings != null) {
-            imports.addAll(clientMappings
-                .entrySet()
-                .stream()
-                .map(m -> createRoleMapper(realm, client, m))
-                .toList());
-        }
+        var clientMappings = getClientMappings(realm, client);
+        imports.addAll(clientMappings
+            .entrySet()
+            .stream()
+            .map(e -> createRoleMapper(realm.getRealm(), client, e))
+            .toList());
 
         return imports;
     }
 
+    protected abstract Map<String, String> getClientMappings(RealmRepresentation realm, ClientRepresentation client);
+
+    protected abstract List<ClientRepresentation> getClientsById(RealmRepresentation realm, String cId);
+
+    protected abstract List<ClientRepresentation> getClients(RealmRepresentation realm);
+
     private TerraformImport createRoleMapper(String realm, ClientRepresentation client,
-        Entry<String, ClientMappingsRepresentation> m) {
+        Entry<String, String> entry) {
         // terraformId: {{realmId}}/client/{{clientId}}/scope-mappings/{{roleClientId}}/{{roleId}}
-        String terraformId = String.format("%s/client/%s/scope-mappings/%s/%s", realm, client.getId(), m.getKey(),
-            m.getValue().getId());
+        String terraformId = String.format("%s/client/%s/scope-mappings/%s/%s", realm, client.getId(), entry.getKey(),
+            entry.getValue());
         String resourceName = String.format("%s_role_map", Helpers.sanitizeName(client.getClientId()));
         return new TerraformImport(terraformId, "keycloak_generic_role_mapper", resourceName);
     }

@@ -3,7 +3,7 @@ package dev.ueslei.cloakform.processor.flow;
 import static dev.ueslei.cloakform.model.AttributeType.LIST;
 import static dev.ueslei.cloakform.model.AttributeType.MAP;
 import static dev.ueslei.cloakform.model.AttributeType.REFERENCE;
-import static dev.ueslei.cloakform.processor.RealmImportProcessor.KEYCLOAK_REALM;
+import static dev.ueslei.cloakform.processor.realm.RealmImportApiProcessor.KEYCLOAK_REALM;
 
 import dev.ueslei.cloakform.model.Attribute;
 import dev.ueslei.cloakform.model.TerraformObject;
@@ -22,17 +22,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 @Slf4j
-@Component
-public class AuthenticationFlowResourceProcessor extends AuthenticationFlowObjectProcessor<TerraformResource> {
+public abstract class AbstractAuthenticationFlowResourceProcessor extends AbstractAuthenticationFlowObjectProcessor<TerraformResource> {
 
     public static final String KEYCLOAK_AUTHENTICATION_FLOW = "keycloak_authentication_flow";
     public static final String KEYCLOAK_AUTHENTICATION_SUBFLOW = "keycloak_authentication_subflow";
     public static final String KEYCLOAK_AUTHENTICATION_EXECUTION = "keycloak_authentication_execution";
     public static final String KEYCLOAK_AUTHENTICATION_EXECUTION_CONFIG = "keycloak_authentication_execution_config";
-
-    public AuthenticationFlowResourceProcessor(Keycloak keycloak) {
-        super(keycloak);
-    }
 
     @Override
     public TerraformResource createExecutionConfig(String realm, String flowPrefix,

@@ -3,42 +3,32 @@ package dev.ueslei.cloakform.processor.flow;
 import dev.ueslei.cloakform.model.TerraformObject;
 import dev.ueslei.cloakform.util.Helpers;
 import dev.ueslei.cloakform.util.RealmNotFoundException;
-import jakarta.ws.rs.NotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
-import org.keycloak.admin.client.Keycloak;
-import org.keycloak.admin.client.resource.AuthenticationManagementResource;
 import org.keycloak.representations.idm.AuthenticationExecutionInfoRepresentation;
 import org.keycloak.representations.idm.AuthenticationFlowRepresentation;
 import org.keycloak.representations.idm.AuthenticatorConfigRepresentation;
-import org.springframework.stereotype.Component;
+import org.keycloak.representations.idm.RealmRepresentation;
 
 @Slf4j
-@Component
-@RequiredArgsConstructor
-public abstract class AuthenticationFlowObjectProcessor<T extends TerraformObject> {
+public abstract class AbstractAuthenticationFlowObjectProcessor<T extends TerraformObject> {
 
-    private final Keycloak keycloak;
-
-    public List<T> generate(String realmName, Optional<String> flowAlias) throws RealmNotFoundException {
-        try {
-            return keycloak.realms().realm(realmName).flows().getFlows().stream()
-                .filter(f -> flowAlias.isEmpty() || f.getAlias().equals(flowAlias.get()))
-                .flatMap(flow -> generate(realmName, flow, null, null, null, 0).stream())
-                .toList();
-        } catch (NotFoundException ex) {
-            throw new RealmNotFoundException(ex);
-        }
+    public List<T> generate(RealmRepresentation realm, Optional<String> flowAlias) throws RealmNotFoundException {
+        return getTopLevelFlows(realm)
+            .stream()
+            .filter(f -> flowAlias.isEmpty() || f.getAlias().equals(flowAlias.get()))
+            .flatMap(flow -> generate(realm, flow, null, null, null, 0).stream())
+            .toList();
     }
 
-    public List<T> generate(String realmName, AuthenticationFlowRepresentation flow,
+    public List<T> generate(RealmRepresentation realm, AuthenticationFlowRepresentation flow,
         AuthenticationFlowRepresentation parentFlow, AuthenticationExecutionInfoRepresentation flowExecution,
         TerraformObject parentObject, int level) {
+        String realmName = realm.getRealm();
         List<T> objects = new ArrayList<>();
 
         if (parentObject == null) {
@@ -52,19 +42,18 @@ public abstract class AuthenticationFlowObjectProcessor<T extends TerraformObjec
         T flowObject = createFlow(realmName, parentFlow, flow, flowExecution, parentObject);
         objects.add(flowObject);
 
-        AuthenticationManagementResource flows = keycloak.realms().realm(realmName).flows();
-        flows.getExecutions(flow.getAlias()).forEach(execution -> {
+        getExecutions(realm, flow).forEach(execution -> {
             if (execution.getLevel() == 0) { // Listing only top level for each subflow to avoid duplication
                 if (execution.getAuthenticationFlow() != null && execution.getAuthenticationFlow()) {
-                    AuthenticationFlowRepresentation subflow = flows.getFlow(execution.getFlowId());
-                    List<T> subflowObjects = generate(realmName, subflow, flow, execution, flowObject, level + 1);
+                    AuthenticationFlowRepresentation subflow = getFlow(realm, execution);
+                    List<T> subflowObjects = generate(realm, subflow, flow, execution, flowObject, level + 1);
                     objects.addAll(subflowObjects);
                 } else {
                     T executionObject = createExecution(realmName, flow, execution, flowObject);
                     objects.add(executionObject);
 
                     Optional<AuthenticatorConfigRepresentation> config = execution.getAuthenticationConfig() != null
-                        ? Optional.of(flows.getAuthenticatorConfig(execution.getAuthenticationConfig()))
+                        ? Optional.of(getAuthenticatorConfig(realm, execution))
                         : Optional.empty();
                     config.ifPresent(c -> {
                         T executionConfigObject = createExecutionConfig(realmName, getFlowPrefix(flow.getAlias()),
@@ -76,6 +65,17 @@ public abstract class AuthenticationFlowObjectProcessor<T extends TerraformObjec
         });
         return objects;
     }
+
+    protected abstract AuthenticatorConfigRepresentation getAuthenticatorConfig(
+        RealmRepresentation realm, AuthenticationExecutionInfoRepresentation execution);
+
+    protected abstract AuthenticationFlowRepresentation getFlow(RealmRepresentation realm,
+        AuthenticationExecutionInfoRepresentation execution);
+
+    protected abstract List<AuthenticationExecutionInfoRepresentation> getExecutions(
+        RealmRepresentation realm, AuthenticationFlowRepresentation flow);
+
+    protected abstract List<AuthenticationFlowRepresentation> getTopLevelFlows(RealmRepresentation realm);
 
     protected abstract T createExecutionConfig(String realm, String flowPrefix,
         AuthenticationExecutionInfoRepresentation execution, AuthenticatorConfigRepresentation executionConfig,

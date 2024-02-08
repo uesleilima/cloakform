@@ -5,17 +5,19 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.1.4</version>
+        <version>3.2.2</version>
         <relativePath/>
     </parent>
     <groupId>dev.ueslei</groupId>
     <artifactId>cloakform</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.2-SNAPSHOT</version>
     <name>CloakForm</name>
     <description>Keycloak to Terraform Generator</description>
     <properties>
         <java.version>17</java.version>
-        <spring-shell.version>3.1.4</spring-shell.version>
+        <spring-shell.version>3.2.1</spring-shell.version>
+        <org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
+        <org.mapstruct.extensions.spring.version>1.1.1</org.mapstruct.extensions.spring.version>
     </properties>
     <dependencies>
         <dependency>
@@ -25,7 +27,7 @@
         <dependency>
             <groupId>org.keycloak</groupId>
             <artifactId>keycloak-admin-client</artifactId>
-            <version>22.0.4</version>
+            <version>22.0.5</version>
             <exclusions>
                 <exclusion>
                     <groupId>commons-logging</groupId>
@@ -42,6 +44,16 @@
             <groupId>com.github.spullara.mustache.java</groupId>
             <artifactId>compiler</artifactId>
             <version>0.9.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+            <version>${org.mapstruct.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mapstruct.extensions.spring</groupId>
+            <artifactId>mapstruct-spring-annotations</artifactId>
+            <version>${org.mapstruct.extensions.spring.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -66,7 +78,7 @@
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>1.19.1</version>
+            <version>1.19.4</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -79,6 +91,12 @@
             <groupId>org.awaitility</groupId>
             <artifactId>awaitility</artifactId>
             <version>3.0.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mapstruct.extensions.spring</groupId>
+            <artifactId>mapstruct-spring-test-extensions</artifactId>
+            <version>${org.mapstruct.extensions.spring.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -95,6 +113,36 @@
     </dependencyManagement>
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.mapstruct</groupId>
+                            <artifactId>mapstruct-processor</artifactId>
+                            <version>${org.mapstruct.version}</version>
+                        </path>
+                        <path>
+                            <groupId>org.mapstruct.extensions.spring</groupId>
+                            <artifactId>mapstruct-spring-extensions</artifactId>
+                            <version>${org.mapstruct.extensions.spring.version}</version>
+                        </path>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                        <dependency>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok-mapstruct-binding</artifactId>
+                            <version>0.2.0</version>
+                        </dependency>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
