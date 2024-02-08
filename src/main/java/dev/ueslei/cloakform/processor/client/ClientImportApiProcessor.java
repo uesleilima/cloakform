@@ -31,13 +31,15 @@ public class ClientImportApiProcessor extends AbstractClientImportProcessor {
     }
 
     protected Map<String, String> getClientMappings(RealmRepresentation realm, ClientRepresentation client) {
-        return keycloak.realm(realm.getRealm()).clients().get(client.getId())
+        var clientMappings = keycloak.realm(realm.getRealm()).clients().get(client.getId())
             .getScopeMappings()
             .getAll()
-            .getClientMappings()
-            .entrySet()
-            .stream()
-            .collect(Collectors.toMap(Entry::getKey, e -> e.getValue().getId()));
+            .getClientMappings();
+        return clientMappings == null
+            ? Map.of()
+            : clientMappings.entrySet()
+                .stream()
+                .collect(Collectors.toMap(Entry::getKey, e -> e.getValue().getId()));
     }
 
     protected List<ClientRepresentation> getClientsById(RealmRepresentation realm, String cId) {

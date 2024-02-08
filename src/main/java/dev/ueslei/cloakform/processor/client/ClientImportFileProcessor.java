@@ -26,7 +26,6 @@ public class ClientImportFileProcessor extends AbstractClientImportProcessor {
 
     @Override
     protected Map<String, String> getClientMappings(RealmRepresentation realm, ClientRepresentation client) {
-        log.warn("Client mappings import not available");
         return Map.of();
     }
 
