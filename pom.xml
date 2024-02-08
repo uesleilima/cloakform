@@ -10,7 +10,7 @@
     </parent>
     <groupId>dev.ueslei</groupId>
     <artifactId>cloakform</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.2-SNAPSHOT</version>
     <name>CloakForm</name>
     <description>Keycloak to Terraform Generator</description>
     <properties>
