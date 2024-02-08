@@ -2,6 +2,7 @@ package dev.ueslei.cloakform.processor.flow;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.ueslei.cloakform.model.TerraformResource;
+import dev.ueslei.cloakform.util.RealmNotFoundException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -24,13 +25,10 @@ public class AuthenticationFlowResourceFileProcessor extends AbstractAuthenticat
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final ConversionService conversionService;
 
-    public List<TerraformResource> generate(Resource realmFile, Optional<String> flowAlias) throws IOException {
+    public List<TerraformResource> generate(Resource realmFile, Optional<String> flowAlias)
+        throws IOException, RealmNotFoundException {
         RealmRepresentation realm = objectMapper.readValue(realmFile.getFile(), RealmRepresentation.class);
-        return getFlows(realm)
-            .stream()
-            .filter(f -> flowAlias.isEmpty() || f.getAlias().equals(flowAlias.get()))
-            .flatMap(flow -> generate(realm, flow, null, null, null, 0).stream())
-            .toList();
+        return generate(realm, flowAlias);
     }
 
     protected List<AuthenticationFlowRepresentation> getFlows(RealmRepresentation realm) {

@@ -27,11 +27,7 @@ public class AuthenticationFlowResourceApiProcessor extends AbstractAuthenticati
         try {
             RealmRepresentation realm = new RealmRepresentation();
             realm.setRealm(realmName);
-            return getFlows(realm)
-                .stream()
-                .filter(f -> flowAlias.isEmpty() || f.getAlias().equals(flowAlias.get()))
-                .flatMap(flow -> generate(realm, flow, null, null, null, 0).stream())
-                .toList();
+            return generate(realm, flowAlias);
         } catch (NotFoundException ex) {
             throw new RealmNotFoundException(ex);
         }

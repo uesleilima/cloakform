@@ -3,7 +3,6 @@ package dev.ueslei.cloakform.processor.flow;
 import dev.ueslei.cloakform.model.TerraformObject;
 import dev.ueslei.cloakform.util.Helpers;
 import dev.ueslei.cloakform.util.RealmNotFoundException;
-import jakarta.ws.rs.NotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -18,19 +17,12 @@ import org.keycloak.representations.idm.RealmRepresentation;
 @Slf4j
 public abstract class AbstractAuthenticationFlowObjectProcessor<T extends TerraformObject> {
 
-    public List<T> generate(String realmName, Optional<String> flowAlias) throws RealmNotFoundException {
-        try {
-            RealmRepresentation realm = new RealmRepresentation();
-            realm.setRealm(realmName);
-
-            return getFlows(realm)
-                .stream()
-                .filter(f -> flowAlias.isEmpty() || f.getAlias().equals(flowAlias.get()))
-                .flatMap(flow -> generate(realm, flow, null, null, null, 0).stream())
-                .toList();
-        } catch (NotFoundException ex) {
-            throw new RealmNotFoundException(ex);
-        }
+    public List<T> generate(RealmRepresentation realm, Optional<String> flowAlias) throws RealmNotFoundException {
+        return getFlows(realm)
+            .stream()
+            .filter(f -> flowAlias.isEmpty() || f.getAlias().equals(flowAlias.get()))
+            .flatMap(flow -> generate(realm, flow, null, null, null, 0).stream())
+            .toList();
     }
 
     public List<T> generate(RealmRepresentation realm, AuthenticationFlowRepresentation flow,
@@ -77,7 +69,8 @@ public abstract class AbstractAuthenticationFlowObjectProcessor<T extends Terraf
     protected abstract AuthenticatorConfigRepresentation getAuthenticatorConfig(
         RealmRepresentation realm, AuthenticationExecutionInfoRepresentation execution);
 
-    protected abstract AuthenticationFlowRepresentation getFlow(RealmRepresentation realm, AuthenticationExecutionInfoRepresentation execution);
+    protected abstract AuthenticationFlowRepresentation getFlow(RealmRepresentation realm,
+        AuthenticationExecutionInfoRepresentation execution);
 
     protected abstract List<AuthenticationExecutionInfoRepresentation> getExecutions(
         RealmRepresentation realm, AuthenticationFlowRepresentation flow);

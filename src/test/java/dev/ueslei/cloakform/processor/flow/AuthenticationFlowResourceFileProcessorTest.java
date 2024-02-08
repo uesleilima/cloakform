@@ -2,6 +2,7 @@ package dev.ueslei.cloakform.processor.flow;
 
 import dev.ueslei.cloakform.config.ConverterConfiguration;
 import dev.ueslei.cloakform.mapper.AuthenticationExecutionMapper;
+import dev.ueslei.cloakform.util.RealmNotFoundException;
 import java.io.IOException;
 import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
@@ -22,7 +23,7 @@ public class AuthenticationFlowResourceFileProcessorTest {
     AuthenticationFlowResourceFileProcessor processor;
 
     @Test
-    void generateTest() throws IOException {
+    void generateTest() throws IOException, RealmNotFoundException {
         var realmFile = new ClassPathResource("cloakform-realm.json");
         var resources = processor.generate(realmFile, Optional.empty());
         Assertions.assertFalse(resources.isEmpty());
