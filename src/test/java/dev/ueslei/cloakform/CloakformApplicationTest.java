@@ -2,7 +2,7 @@ package dev.ueslei.cloakform;
 
 import static org.awaitility.Awaitility.await;
 
-import dasniko.testcontainers.keycloak.KeycloakContainer;
+import dev.ueslei.cloakform.test.AbstractKeycloakContainerBaseTest;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -15,29 +15,14 @@ import org.springframework.shell.test.autoconfigure.AutoConfigureShell;
 import org.springframework.shell.test.autoconfigure.AutoConfigureShellTestClient;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
-@Testcontainers
 @SpringBootTest
 @AutoConfigureShell
 @AutoConfigureShellTestClient
 @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
-class CloakformApplicationTests {
+class CloakformApplicationTest extends AbstractKeycloakContainerBaseTest {
 
     static final String TEMP_DIR = System.getProperty("java.io.tmpdir");
-
-    @Container
-    static KeycloakContainer keycloak = new KeycloakContainer().withRealmImportFile("cloakform-realm.json");
-
-    @DynamicPropertySource
-    static void keycloakProperties(DynamicPropertyRegistry registry) {
-        registry.add("keycloak.serverUrl", keycloak::getAuthServerUrl);
-        registry.add("keycloak.username", keycloak::getAdminUsername);
-        registry.add("keycloak.password", keycloak::getAdminPassword);
-    }
 
     @Autowired
     ShellTestClient shell;

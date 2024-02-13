@@ -12,6 +12,7 @@ import org.keycloak.representations.idm.AuthenticationExecutionInfoRepresentatio
 import org.keycloak.representations.idm.AuthenticationFlowRepresentation;
 import org.keycloak.representations.idm.AuthenticatorConfigRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
@@ -25,6 +26,9 @@ public class AuthenticationFlowResourceFileProcessor extends AbstractAuthenticat
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final ConversionService conversionService;
 
+    @Value("${cloakform.flows.ignored:saml ecp}")
+    private List<String> ignoredFlows = List.of("saml ecp");
+
     public List<TerraformResource> generate(Resource realmFile, Optional<String> flowAlias)
         throws IOException, RealmNotFoundException {
         RealmRepresentation realm = objectMapper.readValue(realmFile.getFile(), RealmRepresentation.class);
@@ -35,6 +39,7 @@ public class AuthenticationFlowResourceFileProcessor extends AbstractAuthenticat
         return realm.getAuthenticationFlows()
             .stream()
             .filter(AuthenticationFlowRepresentation::isTopLevel)
+            .filter(f -> !ignoredFlows.contains(f.getAlias()))
             .toList();
     }
 

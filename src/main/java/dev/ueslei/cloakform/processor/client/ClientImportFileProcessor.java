@@ -6,9 +6,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
+import org.keycloak.representations.idm.ScopeMappingRepresentation;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
@@ -26,7 +28,17 @@ public class ClientImportFileProcessor extends AbstractClientImportProcessor {
 
     @Override
     protected Map<String, String> getClientMappings(RealmRepresentation realm, ClientRepresentation client) {
-        return Map.of();
+        var clientMappings = realm.getClientScopeMappings().get(client.getClientId());
+        return clientMappings == null
+            ? Map.of()
+            : clientMappings.stream()
+                .collect(Collectors.toMap(ScopeMappingRepresentation::getClient,
+                    e -> realm.getClients()
+                        .stream()
+                        .filter(c -> c.getClientId().equals(e.getClient()))
+                        .findFirst()
+                        .get()
+                        .getId()));
     }
 
     @Override
