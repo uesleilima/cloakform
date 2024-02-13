@@ -22,7 +22,7 @@ public class ClientImportFileProcessor extends AbstractClientImportProcessor {
 
     public List<TerraformImport> generate(Resource realmFile, Optional<String> clientId)
         throws IOException {
-        RealmRepresentation realm = objectMapper.readValue(realmFile.getFile(), RealmRepresentation.class);
+        RealmRepresentation realm = objectMapper.readValue(realmFile.getInputStream(), RealmRepresentation.class);
         return generate(realm, clientId);
     }
 

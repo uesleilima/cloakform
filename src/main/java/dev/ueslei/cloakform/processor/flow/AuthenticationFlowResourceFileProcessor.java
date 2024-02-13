@@ -26,12 +26,12 @@ public class AuthenticationFlowResourceFileProcessor extends AbstractAuthenticat
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final ConversionService conversionService;
 
-    @Value("${cloakform.flows.ignored:saml ecp}")
+    @Value("${keycloak.flows.ignored:saml ecp}")
     private List<String> ignoredFlows = List.of("saml ecp");
 
     public List<TerraformResource> generate(Resource realmFile, Optional<String> flowAlias)
         throws IOException, RealmNotFoundException {
-        RealmRepresentation realm = objectMapper.readValue(realmFile.getFile(), RealmRepresentation.class);
+        RealmRepresentation realm = objectMapper.readValue(realmFile.getInputStream(), RealmRepresentation.class);
         return generate(realm, flowAlias);
     }
 

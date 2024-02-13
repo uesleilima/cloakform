@@ -17,7 +17,7 @@ public class RealmImportFileProcessor extends AbstractRealmImportProcessor {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public List<TerraformImport> generate(Resource realmFile) throws IOException {
-        RealmRepresentation realm = objectMapper.readValue(realmFile.getFile(), RealmRepresentation.class);
+        RealmRepresentation realm = objectMapper.readValue(realmFile.getInputStream(), RealmRepresentation.class);
         return generate(realm);
     }
 

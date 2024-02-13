@@ -25,9 +25,7 @@ public class AuthenticationFlowResourceApiProcessor extends AbstractAuthenticati
     public List<TerraformResource> generate(String realmName, Optional<String> flowAlias)
         throws RealmNotFoundException {
         try {
-            RealmRepresentation realm = new RealmRepresentation();
-            realm.setRealm(realmName);
-            return generate(realm, flowAlias);
+            return generate(keycloak.realm(realmName).toRepresentation(), flowAlias);
         } catch (NotFoundException ex) {
             throw new RealmNotFoundException(ex);
         }
@@ -39,7 +37,8 @@ public class AuthenticationFlowResourceApiProcessor extends AbstractAuthenticati
             .getAuthenticatorConfig(execution.getAuthenticationConfig());
     }
 
-    protected AuthenticationFlowRepresentation getFlow(RealmRepresentation realm, AuthenticationExecutionInfoRepresentation execution) {
+    protected AuthenticationFlowRepresentation getFlow(RealmRepresentation realm,
+        AuthenticationExecutionInfoRepresentation execution) {
         return getAuthenticationManagement(realm).getFlow(execution.getFlowId());
     }
 

@@ -22,9 +22,7 @@ public class ClientImportApiProcessor extends AbstractClientImportProcessor {
 
     public List<TerraformImport> generate(String realmName, Optional<String> clientId) throws RealmNotFoundException {
         try {
-            RealmRepresentation realm = new RealmRepresentation();
-            realm.setRealm(realmName);
-            return generate(realm, clientId);
+            return generate(keycloak.realm(realmName).toRepresentation(), clientId);
         } catch (NotFoundException ex) {
             throw new RealmNotFoundException(ex);
         }
